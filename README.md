@@ -12,7 +12,7 @@ Nook targets [Helium](https://helium.computer/) first and aims to work in other 
 
 ## Status
 
-Early discovery. No code or build tooling yet. See [CLAUDE.md](CLAUDE.md) for the rules that apply to all work in this repo, [docs/architecture.md](docs/architecture.md) for the current design, and [docs/discovery-brief.md](docs/discovery-brief.md) for the starting context and open questions.
+Discovery is done. The first code is [Nook Bench](bench/README.md), a test harness that measures on-device model hosting, speed and translation quality on real hardware before the extension itself is built. See [CLAUDE.md](CLAUDE.md) for the rules that apply to all work in this repo, [docs/architecture.md](docs/architecture.md) for the current design, and [docs/discovery-brief.md](docs/discovery-brief.md) for the starting context and open questions.
 
 ## License
 

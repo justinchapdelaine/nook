@@ -10,6 +10,7 @@ Nook is a Chromium extension (Helium first) that adds AI features running only o
 - **[docs/architecture.md](docs/architecture.md)**: the current design and module boundaries. Update it when the design changes.
 - **[docs/discovery-brief.md](docs/discovery-brief.md)**: the starting brief, a snapshot from 2026-11-26. Not kept up to date; use it for background and reasoning only.
 - New findings, plans and longer decision records go in new files under `docs/`, linked from here or from the architecture page.
+- **[bench/](bench/README.md)**: Nook Bench, the benchmark test harness for the experiments in discovery.md. Not the extension; its code need not carry over.
 
 ## Product principles
 
