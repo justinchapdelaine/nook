@@ -107,10 +107,10 @@ export function checkGrouping(reply: string, tabCount: number): GroupingCheck {
 
 /** Signs that a reply contains reasoning instead of (or before) the answer. */
 export function hasReasoning(reply: string): boolean {
-  return (
-    /<\/?think>/i.test(reply) ||
-    /^(okay|ok,|alright|let me|let's|first,|the user|we need to|i need to)/i.test(reply.trim())
-  );
+  // An empty <think></think> block is the model choosing not to reason, so it does not count.
+  const think = reply.match(/<think>([\s\S]*?)(<\/think>|$)/i);
+  if (think) return (think[1] ?? "").trim().length > 0;
+  return /^(okay|ok,|alright|let me|let's|first,|the user|we need to|i need to)/i.test(reply.trim());
 }
 
 /** Removes the empty think block WebLLM puts in front of a reply when thinking is off. */
