@@ -12,6 +12,16 @@ async function attempt<T>(body: () => Promise<T>): Promise<T | { error: string }
   }
 }
 
+/** Fails a browser API call that never settles, so one stuck call cannot hang the run. */
+function within<T>(seconds: number, what: string, call: Promise<T>): Promise<T> {
+  return Promise.race([
+    call,
+    new Promise<never>((_, reject) =>
+      setTimeout(() => reject(new Error(`${what} did not finish within ${seconds} s`)), seconds * 1000),
+    ),
+  ]);
+}
+
 export async function runHeliumChecks(ctx: RunContext) {
   const result: Record<string, unknown> = {};
   result.menus = (await chrome.storage.local.get(KEYS.menus))[KEYS.menus] ?? "not registered yet";
@@ -40,31 +50,39 @@ export async function runHeliumChecks(ctx: RunContext) {
 
   ctx.log("Opening three test tabs and grouping them…");
   const url = chrome.runtime.getURL("/fixture.html");
-  const tabs = await Promise.all([1, 2, 3].map(() => chrome.tabs.create({ url, active: false })));
+  const tabs = await within(
+    20,
+    "Opening tabs",
+    Promise.all([1, 2, 3].map(() => chrome.tabs.create({ url, active: false }))),
+  );
   const ids = tabs.flatMap((t) => (t.id === undefined ? [] : [t.id]));
   const [first, ...others] = ids;
   if (first === undefined) throw new Error("Could not open test tabs");
   result.tabGroup = await attempt(async () => {
-    const groupId = await chrome.tabs.group({ tabIds: [first, ...others] });
-    await chrome.tabGroups.update(groupId, { title: "Nook test", color: "blue" });
+    const groupId = await within(20, "Grouping tabs", chrome.tabs.group({ tabIds: [first, ...others] }));
+    ctx.log("Naming and colouring the group…");
+    await within(20, "Naming the group", chrome.tabGroups.update(groupId, { title: "Nook test", color: "blue" }));
+    ctx.log("Waiting for your answer in the “Your turn” box…");
     const visible = await ctx.askStep(
       'Look at the tab strip: is there a blue group named "Nook test" with three tabs? Press Done if yes, Skip if not.',
     );
-    await chrome.tabs.ungroup([first, ...others]);
+    ctx.log("Ungrouping…");
+    await within(20, "Ungrouping tabs", chrome.tabs.ungroup([first, ...others]));
     return { grouped: true, userSawGroup: visible };
   });
 
   // Page language needs the page loaded.
   await new Promise((resolve) => setTimeout(resolve, 1000));
-  result.pageLanguage = await attempt(() => chrome.tabs.detectLanguage(first));
+  ctx.log("Detecting the test tab's language…");
+  result.pageLanguage = await attempt(() => within(20, "Detecting page language", chrome.tabs.detectLanguage(first)));
 
   ctx.log("Closing a tab and restoring it…");
   result.restore = await attempt(async () => {
-    await chrome.tabs.remove(first);
-    const closed = await chrome.sessions.getRecentlyClosed({ maxResults: 5 });
+    await within(20, "Closing the tab", chrome.tabs.remove(first));
+    const closed = await within(20, "Reading closed tabs", chrome.sessions.getRecentlyClosed({ maxResults: 5 }));
     const entry = closed.find((s) => s.tab && (s.tab.url === url || s.tab.title === "Nook Bench test tab"));
     if (!entry?.tab?.sessionId) return { found: false, entries: closed.length };
-    const restored = await chrome.sessions.restore(entry.tab.sessionId);
+    const restored = await within(20, "Restoring the tab", chrome.sessions.restore(entry.tab.sessionId));
     if (restored.tab?.id !== undefined) others.push(restored.tab.id);
     return { found: true, restored: Boolean(restored.tab), urlVisible: Boolean(entry.tab.url) };
   });
