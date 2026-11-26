@@ -1,0 +1,35 @@
+{
+  "$comment": "Three screens of English article text, written for this benchmark, used to time a full-screen translation (experiment E2). Each paragraph is one translation request, as a page translator would send it.",
+  "screens": [
+    {
+      "title": "Why city trees matter more than we thought",
+      "paragraphs": [
+        "Walk down a street lined with mature trees on a hot afternoon and you can feel the difference. The air is cooler, the light is softer, and the noise of traffic seems further away. For a long time, city planners treated trees as decoration. That view is changing quickly.",
+        "Researchers who measured surface temperatures across several large cities found that blocks with dense tree cover were often several degrees cooler than nearby blocks with little shade. On the hottest days of summer, that gap can decide whether older residents are able to stay safely at home.",
+        "Trees also slow down rainwater. Their leaves catch part of each storm, and their roots open the soil so that water soaks in instead of rushing into drains. In neighbourhoods that flood often, planting trees has become a cheaper complement to rebuilding sewers.",
+        "There are costs. Roots can lift pavements, falling branches damage cars, and young trees need water and care for years before they give much shade. Cities that plant thousands of saplings without a plan for maintenance often lose a large share of them.",
+        "The most successful programmes start small and involve the people who live on each street. When residents choose where trees go and help water them in the first summers, far more of them survive, and the street gains something that will last for decades."
+      ]
+    },
+    {
+      "title": "Getting started with a home sourdough starter",
+      "paragraphs": [
+        "A sourdough starter is nothing more than flour and water that has been left long enough for wild yeast and bacteria to settle in. It sounds simple, and it is, but the first week can be confusing because the mixture changes from day to day.",
+        "Begin with equal weights of whole wheat flour and lukewarm water in a clean jar. Stir well, cover the jar loosely, and leave it somewhere warm. After a day or two you may see a few bubbles. Do not worry if nothing happens at first.",
+        "Each day, throw away most of the mixture and feed what remains with fresh flour and water. This feels wasteful, but it keeps the culture small and active. Around the third day the starter often bubbles up dramatically and then seems to die. This is normal.",
+        "By the end of the first or second week, a healthy starter should double in size within a few hours of feeding and smell pleasantly sour, a little like yoghurt. At that point it is ready to raise bread, although its flavour will keep developing for months.",
+        "If you bake only once a week, keep the starter in the refrigerator and feed it the day before you plan to bake. A neglected starter can usually be revived with two or three regular feedings, so there is no need to start again."
+      ]
+    },
+    {
+      "title": "What to know before buying an electric bike",
+      "paragraphs": [
+        "Electric bikes have moved from a niche product to one of the fastest growing ways to get around town. They make hills easy, let riders arrive without being out of breath, and can replace many short car trips. Choosing one, however, is not straightforward.",
+        "The first decision is the motor. Hub motors sit in the wheel and are simple and affordable. Mid-drive motors sit near the pedals and use the bike's gears, which makes them better on steep climbs but usually more expensive to buy and to repair.",
+        "Battery capacity is listed in watt-hours. A larger number means a longer range, but real range depends on the rider's weight, the terrain, the weather and how much assistance is used. Manufacturers' figures are often measured in ideal conditions, so expect less.",
+        "Think about where the bike will be stored and charged. Electric bikes are heavy, often twice the weight of a regular bike, and carrying one up stairs every day gets old quickly. A removable battery can be charged indoors even if the bike stays in a shed.",
+        "Finally, check the local rules. Many places limit the motor's power and the speed at which it may assist, and some require riders to be a minimum age. A test ride from a nearby shop is the best way to find out which style suits you."
+      ]
+    }
+  ]
+}

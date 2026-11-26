@@ -1,0 +1,402 @@
+{
+  "source": "FLORES-200 devtest (NLLB Team et al., 2022), CC BY-SA 4.0",
+  "languages": {
+    "eng": "eng_Latn",
+    "fra": "fra_Latn",
+    "deu": "deu_Latn",
+    "spa": "spa_Latn",
+    "jpn": "jpn_Jpan",
+    "zho": "zho_Hans",
+    "pol": "pol_Latn",
+    "ukr": "ukr_Cyrl",
+    "vie": "vie_Latn",
+    "swh": "swh_Latn",
+    "tgl": "tgl_Latn"
+  },
+  "sentences": [
+    {
+      "line": 1,
+      "text": {
+        "eng": "\"We now have 4-month-old mice that are non-diabetic that used to be diabetic,\" he added.",
+        "fra": "« Nous avons à présent des souris de 4 mois qui ne sont pas diabétiques alors qu'elles l'étaient auparavant », a-t-il ajouté.",
+        "deu": "„Wir haben jetzt 4 Monate alte Mäuse, die Diabetes hatten und jetzt keinen mehr haben“, fügte er hinzu.",
+        "spa": "«Actualmente, tenemos ratones de cuatro meses de edad que antes solían ser diabéticos y que ya no lo son», agregó.",
+        "jpn": "「我々が飼っている生後4か月のマウスはかつて糖尿病でしたが現在は糖尿病ではない、」と彼は付け加えました。",
+        "zho": "他补充道：“我们现在有 4 个月大没有糖尿病的老鼠，但它们曾经得过该病。”",
+        "pol": "„Mamy teraz myszy w wieku 4 miesięcy, które miały cukrzycę, ale zostały z niej wyleczone” – dodał.",
+        "ukr": "\"Зараз у нас є 4-місячні миші, в яких немає діабету і які мали діабет раніше,\" — додав він.",
+        "vie": "“Chúng tôi hiện có đàn chuột 4 tháng tuổi đã hết bị tiểu đường,” ông nói thêm.",
+        "swh": "\"Sasa tuna panya wenye umri wa miezi minne ambao hawana kisukari ambao awali walikuwa na kisukari\", aliongeza.",
+        "tgl": "\"Mayroon na tayong 4 na buwang gulang na daga na hindi diabetic na dating diabetic,\" dagdag niya."
+      }
+    },
+    {
+      "line": 3,
+      "text": {
+        "eng": "Like some other experts, he is skeptical about whether diabetes can be cured, noting that these findings have no relevance to people who already have Type 1 diabetes.",
+        "fra": "À l'instar d'autres experts, il se montre sceptique quant à la possibilité de guérir le diabète, faisant remarquer que ces résultats ne sont pas applicables aux personnes qui souffrent déjà de diabète de type 1.",
+        "deu": "Wie einige andere Experten zeigte er sich skeptisch, ob es möglich sei, Diabetes zu heilen, und wies darauf hin, dass die Befunde für Menschen, die bereits unter Typ-1-Diabetes litten, keine Bedeutung hätten.",
+        "spa": "Al igual que otros especialistas, es escéptico acerca de si la diabetes tiene cura y remarca que estos descubrimientos no son relevantes para quienes que ya padecen de diabetes de tipo 1.",
+        "jpn": "他の専門家たちと同様に、彼は糖尿病を完治できるかどうかについては懐疑的であり、これらの調査結果はすでにI型糖尿病を患っている人々には何の関連性もないことを指摘しています。",
+        "zho": "和其他一些专家一样，他对糖尿病能否治愈持怀疑态度。他指出，这些发现与已患有 1 型糖尿病的人无关。",
+        "pol": "Tak jak część ekspertów jest sceptyczny co do tego, czy cukrzycę da się wyleczyć; zauważa, że te ustalenia są bez znaczenia dla osób, którze już chorują na cukrzycę typu 1.",
+        "ukr": "Як і деякі інші експерти, він скептично ставиться до зцілення від діабету, відзначаючи, що ці висновки не мають відношення до людей, у яких вже є діабет 1-го типу.",
+        "vie": "Giống như một số chuyên gia khác, ông ấy hoài nghi về khả năng chữa bệnh tiểu đường, với lưu ý rằng các phát hiện này không liên quan tới người đã bị tiểu đường tuýp 1.",
+        "swh": "Kama wataalam wengine, ana shaka kuhusu kama ugonjwa wa kisukari unaweza kutibiwa, akagundua kuwa matokeo haya hayana umuhimu kwa watu ambao tayari wana ugojwa wa kisukari wa aina 1.",
+        "tgl": "Tulad ng iba pang eksperto, nag-aalangan siya kung kayang gamutin ang diabetes, binibigyang pansin niya na walang kinalaman ang mga natuklasang ito sa mga taong mayroon nang Type 1 diabetes."
+      }
+    },
+    {
+      "line": 5,
+      "text": {
+        "eng": "Danius said, \"Right now we are doing nothing. I have called and sent emails to his closest collaborator and received very friendly replies. For now, that is certainly enough.\"",
+        "fra": "Danius a déclaré : « En ce moment, nous ne faisons rien. J'ai appelé et envoyé des courriels à son plus proche collaborateur et j'ai reçu des réponses très amicales. Pour l'instant, c'est certainement suffisant. »",
+        "deu": "Danius sagte: „Im Moment unternehmen wir nichts. Ich habe seinen engsten Mitarbeiter angerufen und ihm E-Mails geschickt und sehr freundliche Antworten erhalten. Das ist vorläufig genug.“",
+        "spa": "Danius declaró: «Actualmente no estamos haciendo nada. Llamé y envié correos electrónicos a su asistente más cercano y recibí contestaciones muy cordiales. Por el momento, eso es sin dudas suficiente».",
+        "jpn": "ダニアスは「今は何もしていない。彼の親しい協力者に電話をかけたり、メールを送ったりしたが、非常に友好的な返事が返ってきた。今のところは、確かにそれで十分だ。」と語った。",
+        "zho": "达尼厄斯说道：“目前我们保持按兵不动。我给他关系最好的合作者打过电话并发送了电子邮件，而且收到了对方非常友好的回复。就目前而言，这足够了。”",
+        "pol": "Danius powiedziała: „Teraz nic nie robimy. Zadzwoniłam do jego najbliższego współpracownika, wysłałam mu e-maile i otrzymałam bardzo miłe odpowiedzi. Na razie to z pewnością wystarczy”.",
+        "ukr": "Даніус сказав: \"Зараз ми нічого не робимо. Я дзвонив і посилав електронні листи його найближчому колезі та отримав дуже доброзичливі відповіді. Наразі цього безумовно буде достатньо\".",
+        "vie": "Danius đã nói, “Ngay lúc này chúng ta chẳng làm gì cả. Tôi đã gọi và gửi email cho đối tác thân cận nhất của anh ta và nhận được phản hồi rất thân thiện. Hiện tại, như vậy là đủ.”",
+        "swh": "Danius alisema, \"Sasa hivi hatufanyi chochote. Nimepiga simu na kutuma barua pepe kwa mshirika wake wa karibu na kupata majibu ya kirafiki sana. Kwa sasa, hakika hiyo imetosha.\"",
+        "tgl": "Sabi ni Danius, \"Ngayon mismo ay wala tayong ginagawa. Nakatawag na ako sa telepono at nakapagpadala ng mga e-mail sa kaniyang pinakamalapit na katulong at nakatanggap ng mga napakamagiliw na sagot. Sa ngayon, talagang sapat na iyon.\""
+      }
+    },
+    {
+      "line": 6,
+      "text": {
+        "eng": "Previously, Ring's CEO, Jamie Siminoff, remarked the company started when his doorbell wasn't audible from his shop in his garage.",
+        "fra": "Auparavant, le PDG de Ring, Jamie Siminoff, a fait remarquer qu'il a lancé l'entreprise lorsque la sonnette de sa porte d'entrée n'était pas audible depuis son magasin dans son garage.",
+        "deu": "Rings CEO Jamie Siminoff sagte einmal, dass er das Unternehmen gegründet habe, nachdem er von seiner Garagenwerkstatt aus seine Türklingel nicht hören konnte.",
+        "spa": "Con anterioridad, el director ejecutivo de Ring, Jamie Siminoff, mencionó que la compañía había iniciado a raíz de que el timbre de su entrada no podía oírse desde la tienda que tenía montada en su garaje.",
+        "jpn": "RingのCEOであるジェイミー・スミノフは以前に、玄関の呼び出し音がガレージにある自分店から聞こえなかったことから事業を始めたと述べました。",
+        "zho": "此前，铃声 (Ring) 公司 CEO 杰米·西米诺夫曾表示，公司成立之初，他在位于车库的工作室里是听不到门铃响声的。",
+        "pol": "Jamie Siminoff, będący dyrektorem generalnym Ring, wcześniej zwrócił uwagę, że firma rozpoczęła działalność, gdy jego dzwonek u drzwi nie był słyszalny ze sklepu w warsztacie.",
+        "ukr": "Раніше генеральний директор Рінг Джеймі Сімінов зауважив, що компанія утворилася, коли він не почув дзвінок у двері зі свого магазину в гаражі.",
+        "vie": "Trước đây, giám đốc điều hành của Ring, Jamie Siminoff, đã phát biểu rằng công ty ra đời khi ông không nghe tiếng chuông cửa khi đang khi ở trong gara.",
+        "swh": "Hapo awali, Mkurugenzi Mtendaji wa Ring, Jamie Siminoff, alitamka kampuni hiyo ilianza wakati kengele yake ya mlangoni haikuwa inasikika katika duka lake kwenye karakana yake.",
+        "tgl": "Dati, sinabi ng CEO ng Ring, si Jamie Siminoff, na nagsimula ang kompanya noong ang kaniyang timbre ay hindi naririnig mula sa kaniyang talyer sa kaniyang garahe."
+      }
+    },
+    {
+      "line": 8,
+      "text": {
+        "eng": "Siminoff said sales boosted after his 2013 appearance in a Shark Tank episode where the show panel declined funding the startup.",
+        "fra": "M. Siminoff a déclaré que les ventes ont augmenté après son apparition en 2013 dans un épisode de Shark Tank où le panel de la série a refusé de financer la start-up.",
+        "deu": "Siminoff sagte, die Verkäufe seien nach seinem Auftritt in einer Folge von „Shark Tank“ im Jahre 2013 stark gestiegen, obwohl die Jury der Sendung die Finanzierung seines Start-ups abgelehnt hatte.",
+        "spa": "Siminoff declaró que las ventas se dispararon luego de su aparición en un episodio de Shark Tank en el año 2013, en el que el panel del programa televisivo se negó a financiar la puesta en marcha de la compañía.",
+        "jpn": "シミノフ氏は、2013年にシャークタンクのエピソードに出演した後、番組委員会が資金提供を辞退した後に売上が急激に伸びたと述べています。",
+        "zho": "西米诺夫说，2013 年他在《创智赢家》节目中露面后，公司的销售额大增，当时节目组拒绝向这家初创公司投资。",
+        "pol": "Siminoff utrzymywał, że sprzedaż podskoczyła w 2013 roku po tym, jak wystąpił w odcinku Shark Tank, w którym panel jurorów nie zdecydował się na finansowanie startupu.",
+        "ukr": "Сімінофф сказав, що продажі збільшилися у 2013 році після його появи в епізоді Басейну з акулами, де інвестори відмовилися фінансувати стартап.",
+        "vie": "Siminoff cho biết doanh số tăng sau sự xuất hiện của mình vào năm 2013 trong một tập Shark Tank khi hội đồng giám khảo chương trình đã từ chối tài trợ cho công ty khởi nghiệp.",
+        "swh": "Siminoff alisema mauzo yaliongezeka baada ya yeye kuonekana katika kipindi cha Shark Tank mnamo 2013 ambapo paneli ya onyesho hilo ilikataa kufadhili biashara hiyo mpya.",
+        "tgl": "Sinabi ni Siminoff na tumaas ang kita matapos ang kaniyang paglabas noong 2013 sa isang episode ng Shark Tank kung saan inayawan ng show panel ang pagbibigay ng pondo para sa pagsisimula."
+      }
+    },
+    {
+      "line": 9,
+      "text": {
+        "eng": "In late 2017, Siminoff appeared on shopping television channel QVC.",
+        "fra": "Fin 2017, Siminoff est apparu sur la chaîne de télé-achat QVC.",
+        "deu": "Ende 2017 trat Siminoff im Teleshopping-Sender QVC auf.",
+        "spa": "Hacia fines del año 2017, Siminoff hizo una aparición en el canal de compras televisadas QVC.",
+        "jpn": "2017年後半にシミノフ氏はテレビショッピング「QVC」に出演しました。",
+        "zho": "2017 年年末，西米诺夫出现在 QVC 电视销售频道。",
+        "pol": "Siminoff wystąpił na antenie telewizyjnego kanału zakupowego QVC pod koniec 2017 roku.",
+        "ukr": "Наприкінці 2017 року Сімінофф прийшов на шопінг-телеканал QVC.",
+        "vie": "Vào cuối năm 2017, Siminoff xuất hiện trên kênh truyền hình mua sắm QVC.",
+        "swh": "Baadaye 2017, Siminoff alionekana katika chaneli ya ununuzi ya televisheni QVC.",
+        "tgl": "Noong huling bahagi ng 2017, lumabas si Siminoff sa istasyon para sa shopping television channel na QVC."
+      }
+    },
+    {
+      "line": 10,
+      "text": {
+        "eng": "Ring also settled a lawsuit with competing security company, the ADT Corporation.",
+        "fra": "Ring a également réglé un procès avec une entreprise de sécurité concurrente, l'ADT Corporation.",
+        "deu": "Ring hat außerdem eine Rechtsstreitigkeit mit der konkurrierenden Sicherheitsfirma ADT Corporation beigelegt.",
+        "spa": "Ring también llegó a un acuerdo en el litigio con la compañía de seguridad de la competencia, ADT Corporation.",
+        "jpn": "Ringはまた、競合するセキュリティ企業であるADTとの訴訟で和解しました。",
+        "zho": "铃声 (Ring) 公司还与竞争对手 ADT 安保公司在一起官司中达成了庭外和解。",
+        "pol": "Ring doszedł także do ugody w procesie z ADT Corporation, konkurencyjną firmą z sektora zabezpieczeń.",
+        "ukr": "У Рінг також залагодили судові справи з конкуруючою охоронною компанією АДТ Корпорейшн.",
+        "vie": "Ring cũng đã dàn xếp một vụ kiện với một công ty an ninh đối thủ là ADT Corporation.",
+        "swh": "Ring pia alitatua mashtaka ya kampuni pinzani ya usalama, Shirika la ADT.",
+        "tgl": "Naayos na rin ang paghahabla ng Ring sa katunggali na kompanya ng seguridad, ang ADT Corporation."
+      }
+    },
+    {
+      "line": 11,
+      "text": {
+        "eng": "While one experimental vaccine appears able to reduce Ebola mortality, up until now, no drugs have been clearly demonstrated suitable for treating existing infection.",
+        "fra": "Même si un vaccin expérimental semble jusqu'ici capable de réduire le taux de mortalité d'Ebola, aucun remède n'a encore été suffisamment efficace pour traiter l'infection existante.",
+        "deu": "Während ein experimenteller Impfstoff in der Lage zu sein scheint, die Ebola-Mortalität zu senken, gibt es bisher keine Medikamente, die als eindeutig zur Behandlung bestehender Infektionen geeignet nachgewiesen wurden.",
+        "spa": "Al día de hoy no se ha demostrado a ciencia cierta que algún fármaco sea adecuado para tratar la infección existente causada por ébola, aun cuando existe una vacuna experimental que pareciera ser capaz de disminuir la mortalidad causada por esa enfermedad.",
+        "jpn": "実験的なワクチンでエボラの死亡率が減るように見えますが、今までのところ、既存の感染症の治療に適しているとはっきり実証された薬剤はありません。",
+        "zho": "虽然有一种实验性疫苗看似能够降低埃博拉病毒的死亡率，但迄今为止，还没明确证明任何药物适合治疗现有的感染。",
+        "pol": "Istnieje jedna eksperymentalna szczepionka, która wydaje się być w stanie obniżyć śmiertelność z powodu zakażenia wirusem Ebola, jednak do tej pory nie wykazano jednoznacznie, aby jakiekolwiek leki nadawały się do leczenia trwającej infekcji.",
+        "ukr": "Одна експериментальна вакцина, схоже, знижує вірогідність смерті від еболи, проте станом на зараз немає жодних ліків, які підійшли б для лікування існуючої інфекції.",
+        "vie": "Trong khi một vắc-xin thử nghiệm có vẻ như có khả năng làm giảm tỷ lệ tử vong do Ebola, cho tới nay, chưa có loại thuốc nào được chứng minh rõ ràng là phù hợp cho việc điều trị căn bệnh lây nhiễm này.",
+        "swh": "Huku chanjo moja ya majaribio ikionekana kupunguza vifo kutokana na Ebola, hadi kufikia sasa, hakuna dawa zimeonyeshwa dhahiri kufaa kutibu maambukizo yaliyoko.",
+        "tgl": "Bagaman ang isang eksperimental na bakuna ay nagpapakita ng kakayahang bawasan ang dami ng namamatay sa Ebola, hanggang ngayon, wala pa ring mga gamot na malinaw na naipakitang angkop na panggamot sa umiiral na impeksyon."
+      }
+    },
+    {
+      "line": 12,
+      "text": {
+        "eng": "One antibody cocktail, ZMapp, initially showed promise in the field, but formal studies indicated it had less benefit than sought in preventing death.",
+        "fra": "Même si l'administration d'un cocktail d'anticorps, ZMapp, avait d'abord montré des signes prometteurs sur le terrain, des études formelles ont démontré que sa capacité à limiter les décès ne répondait pas aux attentes.",
+        "deu": "Ein Antikörper-Cocktail, ZMapp, erwies sich zunächst als vielversprechend, formelle Studien zeigten jedoch, dass er, was die Verhinderung von Todesfällen anbelangt, weniger Vorteile brachte als erhofft.",
+        "spa": "Zmapp, un combinado de anticuerpos, tuvo un prometedor resultado de campo al principio, pero estudios los formales demostraron que era menos beneficioso de lo que se esperaba para prevenir la muerte.",
+        "jpn": "抗体カクテルの1つであるZMappは、当初はこの分野で有望視されていましたが、正式な研究では期待されたほどの死亡予防効果がないことが示されました。",
+        "zho": "一种名为 ZMapp 的“抗体鸡尾酒”（多抗体联合）最初有望在该领域发挥作用，但正式研究表明，它在预防死亡方面的效果有些不尽人意。",
+        "pol": "Jeden koktajl przeciwciał, Zmapp, z początku wydawał się obiecujący, jednak formalne badania dowiodły, że nie jest on aż tak skuteczny w zapobieganiu śmierci, jak tego oczekiwano.",
+        "ukr": "Один коктейль антитіл, ЗМапп, спочатку здавався багатообіцяючим, але офіційні дослідження показали, що він запобігає смертності гірше, ніж розраховували.",
+        "vie": "Một hỗn hợp kháng thể, ZMapp, lúc đầu thể hiện những kết quả đầy hứa hẹn trong thực nghiệm, nhưng những nghiên cứu chính thức cho thấy nó mang lại lợi ích ít hơn mong đợi về mặt ngăn chặn tử vong.",
+        "swh": "Kinywaji kimoja cha kingamwili, ZMapp, hapo awali kilionyesha ahadi uwanjani, lakini tafiti rasmi zilionyesha kilikuwa na faida kidogo kuliko ilivyotafutwa katika kuzuia kifo.",
+        "tgl": "Ang isang antibody cocktail, ang ZMapp, ay nagpakita ng pag-asa sa larangan noong umpisa, ngunit ipinahiwatig ng mga pormal na pag-aaral na mas kakaunti ang benepisyo nito kaysa sa inaasahan sa pagpigil ng kamatayan."
+      }
+    },
+    {
+      "line": 13,
+      "text": {
+        "eng": "In the PALM trial, ZMapp served as a control, meaning scientists used it as a baseline and compared the three other treatments to it.",
+        "fra": "Dans l'essai PALM, le ZMapp a servi de témoin, ce qui signifie que les scientifiques l'ont utilisé comme base de référence et lui ont comparé les trois autres traitements.",
+        "deu": "In der PALM-Studie diente ZMapp als Kontrolle, d.h. die Wissenschaftler verwendeten es als Ausgangsbasis und verglichen die drei anderen Behandlungen damit.",
+        "spa": "En el ensayo PALM, la función de Zmapp fue de control, es decir, que los científicos lo utilizaron como base y compararon con él los otros tres tratamientos.",
+        "jpn": "PALM試験では、ZMappは対照薬として使用され、科学者たちはZMappを基準として、他の3つの治療法と比較しました。",
+        "zho": "在 PALM 实验中，ZMapp 用作参照。也就是科学家将其作为基线，把其他三种治疗方法与之作比较。",
+        "pol": "W ramach badania PALM posłużono się ZMapp jako próbką kontrolną, czyli punktem odniesienia, do którego naukowcy porównywali trzy pozostałe metody leczenia.",
+        "ukr": "У випробуванні ПАЛМ препарат ZMapp слугував у якості контрольного, тобто вчені використовували його як основу і порівняли з ним три інші методики лікування.",
+        "vie": "Trong lần thử PALM, ZMapp đóng vai trò là tiêu chuẩn so sánh, có nghĩ là các nhà khoa học sử dụng nó như là đường cơ sở và so sánh ba cách điều trị khác với nó.",
+        "swh": "Katika jaribio la PALM, Zmapp ilitumika kama kidhibiti, kumaanisha wanasayansi waliitumia kama msingi na kulinganisha matibabu mengine matatu nayo.",
+        "tgl": "Sa pagsubok sa PALM, nagsilbing kontrol ang ZMapp, na nangangahulugang ginamit ito ng mga siyentipiko bilang basehang linya at kinumpara ang tatlong iba pang gamot dito."
+      }
+    },
+    {
+      "line": 14,
+      "text": {
+        "eng": "USA Gymnastics supports the United States Olympic Committee's letter and accepts the absolute need of the Olympic family to promote a safe environment for all of our athletes.",
+        "fra": "La Fédération américaine de gymnastique soutient la lettre du Comité olympique des États-Unis et accepte la nécessité absolue de la famille olympique de promouvoir un environnement sûr pour tous nos athlètes.",
+        "deu": "USA Gymnastics unterstützt den Brief des Olympischen Komitees der Vereinigten Staaten und akzeptiert es als absolute Notwendigkeit, dass sich die olympische Familie für ein sicheres Umfeld für alle unsere Sportler einsetzt.",
+        "spa": "USA Gymnastics respalda la nota del Comité Olímpico de los Estados Unidos y reconoce que resulta imperioso que la familia olímpica fomente un entorno seguro para todos nuestros deportistas.",
+        "jpn": "米国体操連盟（USA Gymnastics）は、米国オリンピック委員会の書簡を支持し、選手全員のための安全な環境づくりを促進するためにオリンピックファミリーの絶対的な必要性を受け入れます。",
+        "zho": "美国体操协会对美国奥委会的信函表示支持，并接受奥运会大家庭的严格要求，即为所有运动员营造一个安全的训练环境。",
+        "pol": "USA Gymnastics wyraża swoje poparcie dla pisma wystosowanego przez amerykański Komitet Olimpijski i wspiera bezwzględną potrzebę promowania bezpiecznego środowiska dla wszystkich sportowców przez organizatorów igrzysk olimpijskich.",
+        "ukr": "Гімнастика США підтримує лист Олімпійського комітету Сполучених Штатів і погоджується з абсолютною необхідністю того, щоб Олімпійська родина сприяла розвитку безпечного середовища для всіх наших спортсменів.",
+        "vie": "Hội Thể dục dụng cụ Hoa Kỳ ủng hộ lá thư của Ủy ban Olympic Hoa Kỳ và chấp nhận yêu cầu tuyệt đối của gia đình Olympic để phát triển một môi trường an toàn cho tất cả vận động viên của chúng ta.",
+        "swh": "USA Gymnastics hukubali barua ya Kamati ya Olimpiki ya Marekani na hukubali hitaji kuu la familia ya Olimpiki la kukuza mazingira salama kwa wanariadha wetu wote.",
+        "tgl": "Itinataguyod ng Gymnastics ng USA ang sulat ng Lupon na Pang-Olympics ng Estados Unidos at sumasang-ayon sa lubos na pangangailangan ng pamilyang Olympic na magsulong ng isang matiwasay na kaligiran para sa lahat ng ating manlalaro."
+      }
+    },
+    {
+      "line": 18,
+      "text": {
+        "eng": "Throughout 1960s, Brzezinski worked for John F. Kennedy as his advisor and then the Lyndon B. Johnson administration.",
+        "fra": "Tout au long des années 1960, Brzezinski a travaillé pour John F. Kennedy en tant que conseiller, puis pour l'administration de Lyndon B. Johnson.",
+        "deu": "Während der 1960er-Jahre arbeitete Brzezinski als Berater für John F. Kennedy sowie anschließend für die Regierung rund um Lyndon B. Johnson.",
+        "spa": "Durante los años 60, Brzezinski trabajó para John F. Kennedy en el puesto de asesor y, posteriormente, para el gobierno de Lyndon B. Johnson.",
+        "jpn": "1960年代を通して、ブレジンスキーはジョン・F・ケネディの顧問を務め、その後リンドン・B・ジョンソン政権でも活躍しました。",
+        "zho": "20 世纪 60 年代，布热津斯基先是为约翰·福特·肯尼迪效力，担任他的顾问，后来又为林登·贝恩斯·约翰逊政府工作。",
+        "pol": "W latach sześćdziesiątych Brzeziński był doradcą Johna F. Kennedy'ego, a później pracował w administracji Lyndona B. Johnsona.",
+        "ukr": "Протягом 1960-х років Бжезінський працював на Джона Ф. Кеннеді його радником, а потім — в адміністрації Ліндона Б. Джонсона.",
+        "vie": "Trong suốt thập niên 1960, Brzezinski làm việc cho John F. Kennedy trong vai trò cố vấn và sau đó làm việc cho chính quyền Lyndon B. Johnson.",
+        "swh": "Katika miaka yote ya 1960, Brzezinski alimfanyia kazi John F. Kennedy kama mshauri wake na pia utawala wa Lyndon B. Johnson.",
+        "tgl": "Sa buong dekada ng 1960, nagtrabaho si Brzezinski para kay John F. Kennedy bilang kaniyang tagapayo at pagkatapos ay sa administrasyon ni Lyndon B. Johnson."
+      }
+    },
+    {
+      "line": 19,
+      "text": {
+        "eng": "During the 1976 selections he advised Carter on foreign policy, then served as National Security Advisor (NSA) from 1977 to 1981, succeeding Henry Kissinger.",
+        "fra": "Lors des sélections de 1976, il a conseillé Carter en matière de politique étrangère, puis a été conseiller à la sécurité nationale (NSA) de 1977 à 1981, succédant à Henry Kissinger.",
+        "deu": "Während der Wahlen im Jahre 1976 beriet er Carter in der Außenpolitik und diente dann von 1977 bis 1981 in Nachfolge von Henry Kissinger als als nationaler Sicherheitsberater (NSA).",
+        "spa": "Asesoró a Carter en materia de política exterior en las elecciones de 1976. Posteriormente, trabajó como asesor de seguridad nacional (ASN) entre 1977 y 1981, luego de Henry Kissinger.",
+        "jpn": "1976 年の大統領選ではカーターの外交政策について助言し、1977 年から 1981 年まで国家安全保障顧問（NSA）を務め、ヘンリー・キッシンジャーの後を継ぎました。",
+        "zho": "在 1976 年总统选举期间，他为卡特提供了对外政策方面的建议，随后在 1977 到 1981 年接替亨利·基辛格担任国家安全顾问 (NSA) 。",
+        "pol": "W czasie wyborów w 1976 roku był doradcą Cartera w kwestiach polityki zagranicznej, później zajmował stanowisko doradcy ds. bezpieczeństwa narodowego w latach 1977–1981, przejmując pałeczkę od Henry'ego Kissingera.",
+        "ukr": "Під час виборів 1976 року він консультував Картера з питань зовнішньої політики, потім з 1977 по 1981 рік працював радником з національної безпеки (РНБ), змінивши Генрі Кіссінджера.",
+        "vie": "Trong những lựa chọn năm 1976, ông đã cố vấn cho Carter về chính sách ngoại giao, sau đó phục vụ với vai trò Cố vấn An ninh Quốc gia (NSA) từ 1977 tới 1981, tiếp nối vị trí của Henry Kissinger.",
+        "swh": "Wakati wa uteuzi wa 1976, alimshauri Carter kuhusu sera ya nje, kisha akafanya kazi kama Mshauri wa Usalama wa Kitaifa (NSA) kutoka 1977 hadi 1981, na alichukua hatamu kutoka kwa Henry Kissinger.",
+        "tgl": "Sa panahon ng seleksyon ng 1976 pinayuhan niya si Carter sa dayuhang polisiya, at naging National Security Advisor (NSA) mula 1977 hanggang 1981, kasunod ni Henry Kissinger."
+      }
+    },
+    {
+      "line": 21,
+      "text": {
+        "eng": "The movie, featuring Ryan Gosling and Emma Stone, received nominations in all major categories.",
+        "fra": "Le film, avec Ryan Gosling et Emma Stone, a reçu des nominations dans toutes les grandes catégories.",
+        "deu": "Der Film mit Ryan Gosling und Emma Stone hat Nominierungen in allen Hauptkategorien erhalten.",
+        "spa": "El filme, protagonizado por Tyan Gosling y Emma Stone, fue nominado en todas las categorías más importantes.",
+        "jpn": "ライアン・ゴズリングとエマ・ストーンが出演したこの映画は、すべての主要部門でノミネートされました。",
+        "zho": "这部由瑞恩·高斯林 (Ryan Gosling) 和艾玛·斯通 (Emma Stone) 主演的电影获得了各大奖项的提名。",
+        "pol": "Film, w którym występowali Ryan Gosling i Emma Stone dostał nominacje we wszystkich głównych kategoriach.",
+        "ukr": "Фільм за участю Райана Гослінга і Еммі Стоун отримав номінації у всіх основних категоріях.",
+        "vie": "Bộ phim với sự góp mặt của Ryan Gosling và Emma Stone nhận được đề cử ở tất cả các hạng mục chính.",
+        "swh": "Sinema, iliyoshirikisha Ryan Gosling na Emma Stone ilipata uteuzi katika kategoria zote kuu.",
+        "tgl": "Ang pelikula, na itinatampok si Ryan Gosling at Emma Stone, ay tumanggap ng mga nominasyon sa lahat ng mahalagang kategorya."
+      }
+    },
+    {
+      "line": 22,
+      "text": {
+        "eng": "Gosling and Stone received nominations for Best Actor and Actress respectively.",
+        "fra": "Golsling et Stone ont respectivement été nominés pour le Meilleur Acteur et la Meilleure Actrice.",
+        "deu": "Gosling und Stone wurden als bester Schauspieler beziehungsweise beste Schauspielerin nominiert.",
+        "spa": "Gosling y Stone fueron nominados como Mejor Actor y Mejor Actriz, respectivamente.",
+        "jpn": "ゴズリングとストーンはそれぞれ主演男優賞と女優賞にノミネートされました。",
+        "zho": "高斯林和斯通分别获得了最佳男主角和最佳女主角的提名。",
+        "pol": "Nominacje do nagrody dla najlepszego aktora i najlepszej aktorki otrzymali Gosling i Stone.",
+        "ukr": "Гослінг і Стоун були номіновані в категорії Кращий актор та Краща акторка відповідно.",
+        "vie": "Gosling và Stone nhận được đề cử lần lượt cho giải Diễn viên nam và Diễn viên nữ Xuất sắc nhất.",
+        "swh": "Gosling na Stone walipokea uteuzi wa Muigizaji na Mwigizaji wa kike Bora mtawalia.",
+        "tgl": "Sina Gosling at Stone ay tumanggap ng mga nominasyon para sa Pinakamahusay na Aktor at Aktres sa gayong pagkakasunod-sunod."
+      }
+    },
+    {
+      "line": 25,
+      "text": {
+        "eng": "Late on Sunday, the United States President Donald Trump, in a statement delivered via the press secretary, announced US troops would be leaving Syria.",
+        "fra": "Tard dimanche, le président des États-Unis Donald Trump, dans une déclaration faite par l'intermédiaire du secrétaire de presse, a annoncé que les troupes américaines allaient se retirer de la Syrie.",
+        "deu": "Am späten Sonntag kündigte der Präsident der Vereinigten Staaten, Donald Trump, in einer durch den Pressesekretär verlesenen Erklärung an, dass die US-Truppen Syrien verlassen würden.",
+        "spa": "El domingo por la noche, en un anuncio realizado mediante el secretario de prensa, el presidente de los Estados Unidos de América, Donald Trump, comunicó que las tropas estadounidenses se retirarían de Siria.",
+        "jpn": "日曜深夜、ドナルド・トランプ米大統領は報道官経由で配信された声明において、米軍がシリアから撤退することを発表しました。",
+        "zho": "周日晚些时候，美国总统唐纳德·特朗普通过新闻秘书发表声明，宣布美军将撤离叙利亚。",
+        "pol": "O późnej porze w niedzielę prezydent Stanów Zjednoczonych Donald Trump w oświadczeniu wydanym przez swojego sekretarza prasowego ogłosił, iż oddziały amerykańskie opuszczą Syrię.",
+        "ukr": "Пізно в неділю Президент Сполучених Штатів Дональд Трамп у заяві, переданій через прес-секретаря, оголосив, що війська США залишать Сирію.",
+        "vie": "Cuối Chủ Nhật, Tổng thống Hoa Kỳ Donald Trump, trong một tuyên bố đã gửi thông qua thư ký báo chí thông báo quân đội Mỹ sẽ rút quân khỏi Syria.",
+        "swh": "Mwishoni mwa Jumapili, Rais wa Marekani Donald Trump, katika taarifa iliyowasilishwa kupitia katibu wa uandishi wa habari, alitangaza kwamba vikosi vya Marekani vitaondoka Siria.",
+        "tgl": "Gabi na noong Linggo, ang Pangulo ng Estados Unidos na si Donald Trump, sa isang pahayag na inihatid ng kalihim ng pahayagan, ay inanunsiyo na aalis na sa Syria ang mga hukbo ng Estados Unidos."
+      }
+    },
+    {
+      "line": 26,
+      "text": {
+        "eng": "The announcement was made after Trump had a phone conversation with Turkish President Recep Tayyip Erdoğan.",
+        "fra": "L’annonce a été faite après que M. Trump ait eu une conversation téléphonique avec le président turc Recep Tayyip Erdoğan.",
+        "deu": "Die Ankündigung erfolgte nach einem Telefongespräch von Trump mit dem türkischen Präsidenten Recep Tayyip Erdoğan.",
+        "spa": "El anuncio se hizo tras la conversación telefónica que Trump mantuvo con con el presidente de Turquía, Recep Tayyip Erdoğan.",
+        "jpn": "本件は、トランプ大統領がトルコのレセップ・タイップ・エルドアン大統領と電話会談した後で発表されました。",
+        "zho": "特朗普与土耳其总统雷杰普·塔伊普·埃尔多安（Recep Tayyip Erdoğan）通话后发表了声明。",
+        "pol": "Obwieszczenie zostało wydane po rozmowie telefonicznej, jaką odbyli ze sobą Trump i prezydent Turcji Recep Tayyip Erdoğan.",
+        "ukr": "Оголошення було зроблено після телефонної розмови Трампа з турецьким президентом Реджепом Таїпом Ердоганом.",
+        "vie": "Tuyên bố được đưa ra sau khi ông Trump có cuộc điện đàm với Tổng Thống Thổ Nhĩ Kỳ Recep Tayyip Erdoğan.",
+        "swh": "Tangazo lilifanywa baada ya Trump kuwa na mazungumzo ya simu na Rais wa Uturuki Recep Tayyip Erdogan.",
+        "tgl": "Ginawa ang anunsyo pagkatapos makipag-usap sa telepono ni Trump sa Pangulo ng Turkey na si Recep Tayyip ErdoÄŸan."
+      }
+    },
+    {
+      "line": 27,
+      "text": {
+        "eng": "Turkey would also take over guarding captured ISIS fighters which, the statement said, European nations have refused to repatriate.",
+        "fra": "La Turquie prendrait également en charge la garde des combattants d'ISIS capturés que, selon la déclaration, les nations européennes ont refusé de rapatrier.",
+        "deu": "Die Türkei würde die Überwachung gefasster ISIS-Kämpfer durchführen, deren Rückführung, so hieß es in dem Statement, von europäischen Ländern abgelehnt wurde.",
+        "spa": "Turquía asumiría, además, la vigilancia de los militantes del ISIS que fueron capturados, a quienes las naciones europeas, conforme indica el comunicado, les denegó su repatriación.",
+        "jpn": "トルコはまた、捉えられたISIS戦闘員の警備を引き継ぐことになり、声明によれば、欧州諸国は戦闘員の本国送還を拒否している。",
+        "zho": "该声明称，土耳其还将接管对被捕的伊斯兰国武装分子的看守任务；欧洲国家拒绝将他们遣送回国。",
+        "pol": "W oświadczeniu stwierdzono, że Turcja przejęłaby również nadzór nad pojmanymi bojownikami ISIS, którym państwa europejskie odmówiły repatriacji.",
+        "ukr": "Туреччина також візьме на себе нагляд за захопленими бойовиками Ісламської держави, яких, як зазначається у заяві, європейські країни відмовилися репатріювати.",
+        "vie": "Thổ Nhĩ Kỳ cũng sẽ tiếp quản việc bảo vệ các chiến binh ISIS bị bắt mà các quốc gia châu Âu tuyên bố đã từ chối cho hồi hương.",
+        "swh": "Uturuki ilikua yachukua ulinzi wa wapiganaji wa ISIS waliotekwa ambao, tangazo lilisema kuwa, nchi za Ulaya zilikataa kurudi.",
+        "tgl": "Hahalili ang Turkey sa pagbabantay sa mga nadakip na mga mandirigmang ISIS na, sinabi sa pahayag, tinanggihang pauwiin ng mga bansa sa Europa."
+      }
+    },
+    {
+      "line": 29,
+      "text": {
+        "eng": ". Scientists say this animal's plumage was chestnut-brown on top with a pale or carotenoid-colored underside.",
+        "fra": "Les scientifiques disent que le plumage de cet animal était brun châtain sur le dessus et de couleur pâle ou caroténoïde sur le dessous.",
+        "deu": "Wissenschaftler sagen, dass das Gefieder dieses Tieres auf der Oberseite kastanienbraun und auf der Unterseite hell- oder carotinoidfarben war.",
+        "spa": "Según los especialistas, este animal tiene un plumaje de color castaño en la zona superior y una tonalidad pálida o carotenoide en la parte de abajo.",
+        "jpn": ".科学者によると、この動物の羽毛は外側が栗色で内側が暖色系の色でした。",
+        "zho": "科学家表示，这种动物的羽毛顶部为栗棕色，底部为浅色或胡萝卜色。",
+        "pol": "Według naukowców upierzenie tego zwierzęcia było kasztanowe na wierzchu, a pod spodem jasne lub w kolorze karotenu.",
+        "ukr": ". Учені стверджують, що оперення цієї тварини було каштаново-коричневим зверху з нижньою частиною блідого або каротиноїдного кольору.",
+        "vie": "Các nhà khoa học cho rằng bộ lông của loài này có màu nâu hạt dẻ phía trên và màu xanh xám hoặc vàng/cam bên dưới.",
+        "swh": ". Wanasayansi wanasema manyoya ya mnyama huyu yalikuwa ya rangi ya kahawia-nyekundu upande wa juu na hafifu au rangi ya karotini upande wa chini.",
+        "tgl": "Sinabi ng mga siyentipiko na ang mga balahibo ng hayop ay kulay kapeng kastanyas sa itaas na may maputla o carotenoid na kulay sa ilalim na bahagi."
+      }
+    },
+    {
+      "line": 30,
+      "text": {
+        "eng": "The find also grants insight into the evolution of feathers in birds.",
+        "fra": "Cette découverte permet également de mieux comprendre l'évolution des plumes chez les oiseaux.",
+        "deu": "Der Fund gewährt auch Einblicke in die Evolution von Federn bei Vögeln.",
+        "spa": "Asimismo, el hallazgo permite comprender mejor la evolución de las plumas de las aves.",
+        "jpn": "この発見はまた、鳥類の羽毛の進化について探るための手がかりとなるものでした。",
+        "zho": "这一发现也有助于深入了解鸟类羽毛的进化。",
+        "pol": "Odkrycie to rzuca także światło na ewolucję piór u ptaków.",
+        "ukr": "Відкриття так само надає розуміння еволюції пір'я у птахів.",
+        "vie": "Phát hiện này cũng mang đến một cái nhìn sâu sắc cho sự tiến hóa đối với lông vũ của các loài chim.",
+        "swh": "Utambuzi huo pia unatoa ufahamu wa mageuko ya manyoya katika ndege.",
+        "tgl": "Ang natuklasan ay nagbigay din ng pananaw sa ebolusyon ng mga balahibo sa mga ibon."
+      }
+    },
+    {
+      "line": 33,
+      "text": {
+        "eng": "The researchers suggested that, even though this is the tail of a young dinosaur, the sample shows adult plumage and not a chick's down.",
+        "fra": "Les scientifiques précisent qu'il s'agit certes de la queue d'un dinosaure juvénile, mais l'échantillon révèle un plumage appartenant à un individu adulte, et non à un jeune.",
+        "deu": "Die Forscher behaupteten, dass, obwohl dies der Schwanz eines jungen Dinosauriers ist, die Probe das Gefieder eines Erwachsenen und keine Kükendaunen zeigt.",
+        "spa": "Las apreciaciones de los expertos fueron que, aun cuando se trata de la cola de un dinosaurio de corta edad, la muestra ilustra más el plumaje de un adulto que el de un polluelo.",
+        "jpn": "研究者らは、この標本が若い恐竜の尻尾であるにもかかわらず、ひなの羽毛ではなく大人の羽毛が生えていることを示唆している。",
+        "zho": "研究人员认为，尽管这是一只年轻恐龙的尾巴，但样本显示的是成年羽毛，而非雏龙的绒毛。",
+        "pol": "Badacze zasugerowali, że mimo iż jest to ogon młodego dinozaura, upierzenie próbki wskazuje na dorosłego osobnika, a nie na pisklę.",
+        "ukr": "Дослідники припустили, що, хоча це хвіст молодого динозавра, зразок демонструє доросле оперення, а не пух дитинчати.",
+        "vie": "Các nhà nghiên cứu cho rằng, mặc dù đây là đuôi của một con khủng long non, mẫu thử cho thấy bộ lông chim của con trưởng thành và không phải là lông của một con gà.",
+        "swh": "Watafiti walipendekeza kwamba, hata kama huu ni mkia wa dinosau mdogo, sampuli hiyo inaonyesha manyoya ya ukubwa na si manyoya ya kifaranga mdogo.",
+        "tgl": "Iminungkahi ng mga mananaliksik na, kahit na buntot ito ng isang batang dinosauro, ipinapakita ng sampol ang balahibo ng matanda at hindi balahibo ng sisiw."
+      }
+    },
+    {
+      "line": 34,
+      "text": {
+        "eng": "A car bomb detonated at police headquarters in Gaziantep, Turkey yesterday morning killed two police officers and injured more than twenty other people.",
+        "fra": "Une voiture piégée a explosé au siège de la police à Gaziantep, en Turquie, hier matin, tuant deux officiers de police et blessant plus de vingt autres personnes.",
+        "deu": "Eine Autobombe detonierte am Morgen des gestrigen Tages im Polizeipräsidium des türkischen Gaziantep, tötete zwei Polizisten und verwundete über zwanzig weitere Menschen.",
+        "spa": "En la mañana de ayer, en Gaziantep, Turquía, un coche bomba mató a dos oficiales de policía e hirió a más de otras veinte personas.",
+        "jpn": "昨日の朝、トルコのガジアンテップの警察本部で自動車爆弾の爆発により、警官2人が死亡し、負傷者は20人を超えました。",
+        "zho": "昨日上午，土耳其加齐安泰普（Gaziantep）的警察总部发生了一起汽车炸弹爆炸事件，该事件导致两名警察死亡，20 余人受伤。",
+        "pol": "Bomba zamontowana w samochodzie została zdetonowana wczoraj rano na terenie komendy głównej policji w Gaziantep, w Turcji, uśmiercając dwóch funkcjonariuszy i raniąc ponad dwadzieścia osób.",
+        "ukr": "Учора вранці біля відділення поліції міста Газіантеп, Туреччина, здетонувала автомобільна бомба, яка призвела до загибелі двох офіцерів поліції й поранення понад двадцяти інших осіб.",
+        "vie": "Sáng hôm qua, một quả bom cài trong xe hơi đã phát nổ tại trụ sở cảnh sát ở Gaziantep, Thổ Nhĩ Kỳ làm hai cảnh sát viên thiệt mạng và hơn hai mươi người khác bị thương.",
+        "swh": "Bomu la gari lililolipuliwa katika hedikota ya polisi katika Gaziantep, Uturuki jana asubuhi liliwaua maafisa wawili wa polisi na kuwajeruhi watu wengine zaidi ya ishirini.",
+        "tgl": "Isang bombang nasa kotse na pinasabog sa punong-himpilan ng mga pulis sa Gaziantep, Turkey kahapon ng umaga ang kumitil ng buhay ng dalawang pulis at sinaktan ang mahigit sa dalawampung iba pang tao."
+      }
+    },
+    {
+      "line": 35,
+      "text": {
+        "eng": "The governor's office said nineteen of the injured were police officers.",
+        "fra": "Le bureau du gouverneur a déclaré que dix-neuf des blessés étaient des officiers de police.",
+        "deu": "Nach Angaben des Gouverneursbüros handelt es sich bei neunzehn der Verletzten um Polizeibeamte.",
+        "spa": "Desde el gobierno informaron que diecinueve de las personas heridas eran policías.",
+        "jpn": "知事室の報道によれば、負傷者のうち19人は警官でした。",
+        "zho": "州长办公室表示，伤者中有十九人是警察。",
+        "pol": "Zgodnie z oświadczeniem biura gubernatora wśród rannych było dziewiętnastu policjantów.",
+        "ukr": "Адміністрація губернатора заявила, що дев'ятнадцять із поранених були співробітниками поліції.",
+        "vie": "Văn phòng của thống đốc cho biết mười chín người trong số những người bị thương là sĩ quan cảnh sát.",
+        "swh": "Ofisi ya Gavana ilisema kumi na tisa wa wale waliojeruhiwa walikuwa maafisa wa polisi.",
+        "tgl": "Sinabi ng opisina ng gobernador na labing siyam sa mga nasugatan ay mga opisyal na pulis."
+      }
+    },
+    {
+      "line": 36,
+      "text": {
+        "eng": "Police said they suspect an alleged Daesh (ISIL) militant of responsibility for the attack.",
+        "fra": "La police a déclaré soupçonner un militant présumé de Daesh (ÉI) comme le suspect à l'origine de cette attaque.",
+        "deu": "Die Polizei sagte, dass sie einen militanten Anhänger von Daesh (ISIL) hinter dem Angriff vermuten.",
+        "spa": "La policía informó que el sospechoso por el ataque es un supuesto militante de Daish (ELIL).",
+        "jpn": "警察は、攻撃に関与した過激派ダーシュ（ISIL）を疑っていると述べました。",
+        "zho": "警方说他们怀疑一名疑似伊斯兰国 (ISIL) 的武装分子发动了这场袭击。",
+        "pol": "Policja mówi, że podejrzewają o atak przypuszczalnego wojownika Daesh (ISIL).",
+        "ukr": "Поліція заявила, що підозрює в нападі бойовика Даїш (ІДІЛ).",
+        "vie": "Cảnh sát nói họ tình nghi một dân quân Daesh (ISIL) chịu trách nhiệm về vụ tấn công.",
+        "swh": "Polisi walisema wanashuku wanaodaiwa kuwa wanamgambo wa Daesh (ISIL) kwa kuhusika na shambulio hilo.",
+        "tgl": "Sinabi ng pulisya na pinagsususpetsahan nila ang di-umano'y militanteng Daesh (ISIL) na may pananagutan para sa pagsalakay."
+      }
+    }
+  ]
+}
