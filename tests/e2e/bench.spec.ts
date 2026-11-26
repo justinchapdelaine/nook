@@ -66,7 +66,8 @@ test("model experiments skip models that are not downloaded, and results survive
   await card.getByRole("button", { name: "Run" }).click();
   await expect(card.locator(".status")).toHaveText(/Finished/, { timeout: 30_000 });
   await expect(card.locator(".log")).toContainText("Skipping Qwen3.5 2B");
-  expect((await results(page)).e2.models).toEqual({});
+  // The results box refreshes just after the status line, so wait for it.
+  await expect.poll(async () => (await results(page)).e2?.models).toEqual({});
   await page.reload();
   await expect(page.locator("body")).toHaveAttribute("data-ready", "true");
   expect((await results(page)).e2.models).toEqual({});
