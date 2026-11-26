@@ -25,4 +25,4 @@ flowchart TD
 
 ## Open
 
-- Whether the inference runtime lives in the service worker or an offscreen document.
+- Whether the inference runtime lives in the service worker or an offscreen document. [discovery.md](discovery.md) recommends an offscreen document running WebLLM in a dedicated worker, pending measurement.
