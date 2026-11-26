@@ -13,7 +13,7 @@ flowchart TD
     dom --> task["Task layer<br/>translate(segments, source, target) and groupTabs(tabs); picks model and prompt"]
     tabs --> task
     task --> sched["Scheduler<br/>One GPU queue; what the user is waiting on runs first"]
-    sched --> runtime["Inference runtime<br/>WebLLM; service worker or offscreen (TBD)"]
+    sched --> runtime["Inference runtime<br/>WebLLM in a worker inside the offscreen document"]
     config["Model config<br/>Weights downloaded, .wasm bundled"] --> runtime
 ```
 
@@ -23,6 +23,9 @@ flowchart TD
 - The scheduler runs one GPU queue, so what the user is waiting on goes first.
 - The model list is configuration. A fine-tuned or newer model is a config change.
 
-## Open
+## Hosting
 
-- Whether the inference runtime lives in the service worker or an offscreen document. [discovery.md](discovery.md) recommends an offscreen document running WebLLM in a dedicated worker, pending measurement.
+The inference runtime runs WebLLM in a dedicated worker inside an offscreen document. The service worker stays a thin router for `chrome.*` APIs and opens the offscreen document on demand. In [Nook Bench](bench-results.md#hosting-e1) the offscreen document kept the model through idle time and through a service worker restart, while the service worker lost it every time, once in the middle of a reply.
+
+- Ports from `runtime.connect` reach every extension context with a listener, so a host dying does not always disconnect its clients. Clients need a heartbeat or timeout to notice a host that stopped.
+- Loading from cache takes about 1 to 2 s, so the offscreen document can close after an idle period to free GPU memory and reopen on demand.
