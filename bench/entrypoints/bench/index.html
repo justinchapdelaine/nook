@@ -1,0 +1,198 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Nook Bench</title>
+    <link rel="stylesheet" href="./style.css" />
+  </head>
+  <body>
+    <header>
+      <h1>Nook Bench</h1>
+      <p>
+        Benchmarks for Nook's on-device model work. Inference runs on this device only. The one network use is
+        downloading model weights from huggingface.co, and that only happens when you press a <strong>Download</strong>
+        button below.
+      </p>
+      <ol>
+        <li>Download the models you want to test (2B and 0.8B at least; Qwen3 1.7B for the stability baseline).</li>
+        <li>Run the experiments, one at a time, top to bottom. Keep this tab open and the computer awake.</li>
+        <li>Press <strong>Copy results</strong> at the bottom and paste the block back into the chat.</li>
+      </ol>
+      <label class="toggle">
+        <input type="checkbox" id="ask-vram" checked />
+        Ask me for GPU memory readings from Task Manager (Performance, GPU, Dedicated GPU memory)
+      </label>
+    </header>
+
+    <main>
+      <section aria-labelledby="env-title">
+        <h2 id="env-title">This device</h2>
+        <p id="env-summary">Checking…</p>
+      </section>
+
+      <section aria-labelledby="models-title">
+        <h2 id="models-title">Models</h2>
+        <p class="note" id="f16-note"></p>
+        <table>
+          <thead>
+            <tr><th scope="col">Model</th><th scope="col">GPU memory (WebLLM estimate)</th><th scope="col">Status</th><th scope="col"></th></tr>
+          </thead>
+          <tbody id="models"></tbody>
+        </table>
+        <p class="status" id="download-status" role="status"></p>
+      </section>
+
+      <section class="exp" data-exp="e0" aria-labelledby="e0-title">
+        <h2 id="e0-title">E0 · Package and GPU check <span class="time">under a minute, no download</span></h2>
+        <p>Checks that WebGPU works in both hosts and that every model library in the package loads and compiles.</p>
+        <button type="button" data-run>Run</button>
+        <p class="status" role="status"></p>
+        <details><summary>Log</summary><pre class="log"></pre></details>
+      </section>
+
+      <section class="exp" data-exp="e1" aria-labelledby="e1-title">
+        <h2 id="e1-title">E1 · Hosting: offscreen document or service worker <span class="time">about 15 minutes, 70 with the long wait</span></h2>
+        <p>
+          Loads the model in each host twice, leaves each idle for 5 minutes to see whether it keeps the model, then
+          asks you to stop the service worker by hand and checks what survived.
+        </p>
+        <label>Model <select name="e1Family"><option>Qwen3.5-2B</option><option>Qwen3.5-0.8B</option></select></label>
+        <label class="toggle"><input type="checkbox" name="e1Long" /> Also leave the offscreen host idle for 60 minutes</label>
+        <label class="toggle"><input type="checkbox" name="e1Stop" checked /> Include the manual service worker stop</label>
+        <button type="button" data-run>Run</button>
+        <p class="status" role="status"></p>
+        <details><summary>Log</summary><pre class="log"></pre></details>
+      </section>
+
+      <section class="exp" data-exp="e2" aria-labelledby="e2-title">
+        <h2 id="e2-title">E2 · Speed <span class="time">about 5 minutes per model</span></h2>
+        <p>
+          Decode and prefill tokens per second, and the time to translate three screens of article text into French and
+          Japanese, paragraph by paragraph. Tests 2B, 2B in q4f32 when your GPU also supports q4f16, and 0.8B.
+        </p>
+        <button type="button" data-run>Run</button>
+        <p class="status" role="status"></p>
+        <details><summary>Log</summary><pre class="log"></pre></details>
+      </section>
+
+      <section class="exp" data-exp="e3" aria-labelledby="e3-title">
+        <h2 id="e3-title">E3 · Stability with thinking off <span class="time">about 5 minutes per model</span></h2>
+        <p>
+          30 translation and 20 tab grouping prompts with thinking off, counting reasoning text, empty replies and
+          broken JSON, plus 4 prompts with thinking on. Runs 2B and the Qwen3 1.7B baseline.
+        </p>
+        <label class="toggle"><input type="checkbox" name="e3Small" checked /> Also run 0.8B</label>
+        <button type="button" data-run>Run</button>
+        <p class="status" role="status"></p>
+        <details><summary>Log</summary><pre class="log"></pre></details>
+      </section>
+
+      <section class="exp" data-exp="e4" aria-labelledby="e4-title">
+        <h2 id="e4-title">E4 · Context size <span class="time">about 5 minutes</span></h2>
+        <p>
+          Loads 2B with a 4K, 8K and 16K token context, fills most of it, and checks a word hidden at the start is
+          found. GPU memory readings matter most here.
+        </p>
+        <label class="toggle"><input type="checkbox" name="e4Large" /> Also try 32K</label>
+        <button type="button" data-run>Run</button>
+        <p class="status" role="status"></p>
+        <details><summary>Log</summary><pre class="log"></pre></details>
+      </section>
+
+      <section class="exp" data-exp="e5" aria-labelledby="e5-title">
+        <h2 id="e5-title">E5 · Translation quality <span class="time">10 to 25 minutes</span></h2>
+        <p>
+          Scores 2B and 0.8B with chrF against reference translations, English to and from French, German, Spanish,
+          Japanese, Chinese, Polish, Ukrainian, Vietnamese, Swahili and Tagalog.
+        </p>
+        <label>Sentences per language pair <select name="e5Count"><option>5</option><option selected>10</option><option>24</option></select></label>
+        <label class="toggle"><input type="checkbox" name="e5All" /> Include every output in the results (long)</label>
+        <button type="button" data-run>Run</button>
+        <p class="status" role="status"></p>
+        <details><summary>Log</summary><pre class="log"></pre></details>
+      </section>
+
+      <section class="exp" data-exp="e6" aria-labelledby="e6-title">
+        <h2 id="e6-title">E6 · Inline markers and batching <span class="time">about 10 minutes</span></h2>
+        <p>
+          Sends sentences with bold and link markers in three formats and checks every marker comes back. Then sends
+          batches of 1, 4 and 8 sentences, with and without page context, and times each.
+        </p>
+        <button type="button" data-run>Run</button>
+        <p class="status" role="status"></p>
+        <details><summary>Log</summary><pre class="log"></pre></details>
+      </section>
+
+      <section class="exp" data-exp="e7" aria-labelledby="e7-title">
+        <h2 id="e7-title">E7 · Helium APIs and permissions <span class="time">about 5 minutes, no download</span></h2>
+        <p>Automatic checks first (it opens and groups three test tabs), then a few things to try by hand.</p>
+        <button type="button" data-run>Run automatic checks</button>
+        <p class="status" role="status"></p>
+        <details><summary>Log</summary><pre class="log"></pre></details>
+        <ol class="manual">
+          <li>
+            Right-click any tab. Are there two items, <em>Nook Bench: tab item A</em> and <em>B</em>? Click A.
+            <span class="seen" data-event="e7.tabMenu"></span>
+            <span class="answer" data-manual="tabMenuVisible"></span>
+          </li>
+          <li>
+            Right-click the Nook Bench toolbar icon and choose <em>Request the tabs permission</em>. What did the prompt say?
+            <span class="seen" data-event="e7.tabsPermission"></span>
+            <input type="text" data-manual="tabsPromptText" aria-label="Text of the permission prompt" />
+          </li>
+          <li>
+            Open any web page, right-click the page and choose <em>Nook Bench: test the model connection from this
+            page</em>. (Load a model first, for example by running E2, to also time a reply.)
+            <span class="seen" data-event="e7.probe"></span>
+          </li>
+          <li>
+            Open <code>chrome://extensions</code>, then Nook Bench, then Details, and paste what it lists under
+            Permissions.
+            <textarea data-manual="permissionsList" rows="3" aria-label="Permissions list"></textarea>
+          </li>
+          <li>
+            Anything odd? Crashes, missing menus, errors.
+            <textarea data-manual="notes" rows="3" aria-label="Notes"></textarea>
+          </li>
+        </ol>
+      </section>
+
+      <section aria-labelledby="results-title">
+        <h2 id="results-title">Results</h2>
+        <p>
+          <button type="button" command="--copy" commandfor="results">Copy results</button>
+          <span class="tip" role="status"></span>
+          <button type="button" id="clear">Clear results</button>
+        </p>
+        <textarea id="results" rows="16" readonly aria-label="Results block"></textarea>
+        <p class="note">
+          Quality fixtures use sentences from FLORES-200 (NLLB Team et al., 2022), licensed under CC BY-SA 4.0.
+        </p>
+      </section>
+    </main>
+
+    <dialog id="vram-dialog" aria-labelledby="vram-title">
+      <h1 id="vram-title">GPU memory reading</h1>
+      <form method="dialog">
+        <p id="vram-moment"></p>
+        <p>
+          In Task Manager, open Performance, then GPU, and type the <strong>Dedicated GPU memory</strong> in use now.
+          Wait a few seconds for it to settle.
+        </p>
+        <label>In use (GB) <input type="number" name="gb" step="0.01" min="0" autofocus /></label>
+        <p class="buttons"><button type="submit" value="skip">Skip</button> <button type="submit" value="ok">Record</button></p>
+      </form>
+    </dialog>
+
+    <dialog id="step-dialog" aria-labelledby="step-title">
+      <h1 id="step-title">Your turn</h1>
+      <form method="dialog">
+        <p id="step-text"></p>
+        <p class="buttons"><button type="submit" value="skip">Skip</button> <button type="submit" value="done" autofocus>Done</button></p>
+      </form>
+    </dialog>
+
+    <script type="module" src="./main.ts"></script>
+  </body>
+</html>

@@ -1,0 +1,77 @@
+{
+  "$comment": "Models the benchmark can load. model_lib files ship in the package (fetched by scripts/fetch-model-libs.ts and checked against sha256); only weights are downloaded, from the model URL. Records are copied from WebLLM 0.2.89's catalogue, including its overrides.",
+  "libSource": "https://raw.githubusercontent.com/mlc-ai/binary-mlc-llm-libs/main/web-llm-models/v0_2_87/base/",
+  "models": [
+    {
+      "id": "Qwen3.5-2B-q4f16_1-MLC",
+      "label": "Qwen3.5 2B (q4f16)",
+      "family": "Qwen3.5-2B",
+      "weights": "https://huggingface.co/mlc-ai/Qwen3.5-2B-q4f16_1-MLC",
+      "lib": "Qwen3.5-2B-q4f16_1_cs1k-webgpu.wasm",
+      "sha256": "f3b3c89c5040e600982320307bf15431d6db3f2b719f1d42240df808a1803fd3",
+      "needsF16": true,
+      "vramMB": 2245,
+      "overrides": {
+        "context_window_size": 4096,
+        "max_history_size": 1,
+        "conv_config": { "stop_token_ids": [248046, 248044] }
+      }
+    },
+    {
+      "id": "Qwen3.5-2B-q4f32_1-MLC",
+      "label": "Qwen3.5 2B (q4f32)",
+      "family": "Qwen3.5-2B",
+      "weights": "https://huggingface.co/mlc-ai/Qwen3.5-2B-q4f32_1-MLC",
+      "lib": "Qwen3.5-2B-q4f32_1_cs1k-webgpu.wasm",
+      "sha256": "e3e3173d7cf1d97f7abc6ce0175980e7e1d49a15b68e2b6bfa31381e04239c6c",
+      "needsF16": false,
+      "vramMB": 2592,
+      "overrides": {
+        "context_window_size": 4096,
+        "max_history_size": 1,
+        "conv_config": { "stop_token_ids": [248046, 248044] }
+      }
+    },
+    {
+      "id": "Qwen3.5-0.8B-q4f16_1-MLC",
+      "label": "Qwen3.5 0.8B (q4f16)",
+      "family": "Qwen3.5-0.8B",
+      "weights": "https://huggingface.co/mlc-ai/Qwen3.5-0.8B-q4f16_1-MLC",
+      "lib": "Qwen3.5-0.8B-q4f16_1_cs1k-webgpu.wasm",
+      "sha256": "39623bb05581e04616debfd762b8ea0d0f2d641b3afa8ac1df902aac0dfdb04e",
+      "needsF16": true,
+      "vramMB": 1629,
+      "overrides": {
+        "context_window_size": 4096,
+        "max_history_size": 1,
+        "conv_config": { "stop_token_ids": [248046, 248044] }
+      }
+    },
+    {
+      "id": "Qwen3.5-0.8B-q4f32_1-MLC",
+      "label": "Qwen3.5 0.8B (q4f32)",
+      "family": "Qwen3.5-0.8B",
+      "weights": "https://huggingface.co/mlc-ai/Qwen3.5-0.8B-q4f32_1-MLC",
+      "lib": "Qwen3.5-0.8B-q4f32_1_cs1k-webgpu.wasm",
+      "sha256": "f30fcfe254da619b356e201be00d4275123ea20afcd57d7a01f1e90a5b04f023",
+      "needsF16": false,
+      "vramMB": 1894,
+      "overrides": {
+        "context_window_size": 4096,
+        "max_history_size": 1,
+        "conv_config": { "stop_token_ids": [248046, 248044] }
+      }
+    },
+    {
+      "id": "Qwen3-1.7B-q4f16_1-MLC",
+      "label": "Qwen3 1.7B (q4f16, stability baseline)",
+      "family": "Qwen3-1.7B",
+      "weights": "https://huggingface.co/mlc-ai/Qwen3-1.7B-q4f16_1-MLC",
+      "lib": "Qwen3-1.7B-q4f16_1_cs1k-webgpu.wasm",
+      "sha256": "363f4dbb789f0518e52295d1f4685d2d61feae4ac4e2a6a95621e4af29450bd7",
+      "needsF16": true,
+      "vramMB": 2037,
+      "overrides": { "context_window_size": 4096 }
+    }
+  ]
+}
