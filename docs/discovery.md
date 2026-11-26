@@ -15,7 +15,7 @@ How each finding was checked:
 3. **Bundling `model_lib` works as intended.** WebLLM fetches any `model_lib` URL that isn't `http(s)` with a plain `fetch` and skips its cache, so a `chrome-extension://` URL is fine. Each Qwen3.5 library is about 7 MB. Research and probe.
 4. **The 4K context is a load-time setting, not part of the compiled library.** It can be raised when loading the model. Because only one in four Qwen3.5 layers keeps a key-value cache, raising it should cost much less memory than for a standard model. The exact cost needs measuring.
 5. **Host the model in an offscreen document that runs WebLLM in a dedicated worker.** The service worker stays a thin router for `chrome.*` APIs. Research favours this strongly; experiment E1 confirms it on Justin's machine.
-6. **0.8B is very likely too weak for translation.** On Qwen's own translation benchmark (WMT24++, 55 languages), Qwen3.5-0.8B scores 27.2, Qwen3.5-2B 45.8, and Qwen3-4B 58.9. 2B looks like the floor, and Qwen3.5-4B (about 3.9 GB of GPU memory, now in the WebLLM catalogue) should be measured as a quality option.
+6. **0.8B is very likely too weak for translation.** On Qwen's own translation benchmark (WMT24++, 55 languages), Qwen3.5-0.8B scores 27.2, Qwen3.5-2B 45.8, and Qwen3-4B 58.9. 2B looks like the floor. Testing starts with 2B and 0.8B (owner decision); Qwen3.5-4B (about 3.9 GB of GPU memory, now in the WebLLM catalogue) can be added later as a config change if 2B falls short.
 7. **Stack: TypeScript, WXT on Vite, Biome, Vitest and Playwright.** A spike with WXT 0.21.5, Vite 8.4, TypeScript 7.0 and WebLLM 0.2.89 builds in under a second and loads WebLLM in a worker inside an offscreen document in Chromium 158.
 
 ## What in the brief is outdated or wrong
@@ -60,7 +60,7 @@ Still correct: WebGPU works in extension service workers (probe: an adapter is r
 
 ### Translation quality: is 0.8B enough?
 
-**Very likely not; measure 2B and 4B (E5).** Qwen's model cards give WMT24++ scores of 27.2 for 0.8B and 45.8 for 2B, against 58.9 for Qwen3-4B. Treat 0.8B as an option for tab naming only, not translation. E5 scores 2B and 4B (plus Gemma 4 E2B as the strongest multilingual alternative in the catalogue) across common and less common languages.
+**Very likely not; measure 2B and 0.8B (E5).** Qwen's model cards give WMT24++ scores of 27.2 for 0.8B and 45.8 for 2B, against 58.9 for Qwen3-4B. Treat 0.8B as an option for tab naming only, not translation. E5 scores 2B and 0.8B across common and less common languages. Larger or alternative models come later, only if 2B falls short.
 
 ### Inline tags
 
@@ -105,7 +105,7 @@ See [Stack](#stack).
 
 ### Candidate models
 
-**From the catalogue, worth including in E5:** Qwen3.5-4B (quality option), Gemma 4 E2B (Gemma models are strongly multilingual), and Qwen3-1.7B as the comparison baseline.
+**From the catalogue, for later if 2B falls short:** Qwen3.5-4B (quality option) and Gemma 4 E2B (Gemma models are strongly multilingual). Qwen3-1.7B stays in E3 as the comparison baseline for stability.
 
 **Translation-tuned, outside the catalogue:**
 
@@ -139,10 +139,10 @@ GPU memory can't be read from JavaScript. Where VRAM matters, the page pauses an
 | ID | Question | What it does | Answer it gives |
 | --- | --- | --- | --- |
 | E1 | Hosting | Loads Qwen3.5-2B from cache in the offscreen document's worker and in the service worker. Records cold load, load from cache, behaviour after 5 and 60 minutes idle, and recovery after the service worker is stopped from `chrome://extensions`. | Confirms the offscreen choice and gives the reopen time for the idle-unload setting. |
-| E2 | Speed | Prefill and decode tokens per second for 0.8B, 2B and 4B (`q4f16`, plus `q4f32` for 2B), and seconds per screen on three fixture pages. | Whether full-page translation feels usable, and on which model. |
+| E2 | Speed | Prefill and decode tokens per second for 0.8B and 2B (`q4f16`, plus `q4f32` for 2B), and seconds per screen on three fixture pages. | Whether full-page translation feels usable, and on which model. |
 | E3 | Qwen3.5 stability | 50 translation and grouping prompts with thinking off; counts any reasoning text, empty replies or broken JSON. Repeats with Qwen3-1.7B. | Whether Qwen3.5 is reliable enough to build on. |
 | E4 | Context | Loads 2B at 4K, 8K and 16K; records success and VRAM. | The context size to put in config. |
-| E5 | Quality | chrF on FLORES sentences for 2B, 4B, Gemma 4 E2B and 0.8B, English to and from French, German, Spanish, Japanese, Chinese, Polish, Ukrainian, Vietnamese, Swahili and Tagalog. | The default model, and whether a translation-tuned model is needed. |
+| E5 | Quality | chrF on FLORES sentences for 2B and 0.8B, English to and from French, German, Spanish, Japanese, Chinese, Polish, Ukrainian, Vietnamese, Swahili and Tagalog. | The default model, and whether a translation-tuned model is needed. |
 | E6 | Markers and batching | Inline-markup fixtures in the three marker formats; batch sizes 1, 4 and 8, with and without reference context. Records marker survival rate, time per block and chrF. | The marker format, fallback rate and batch size. |
 | E7 | Helium APIs and permissions | A manual checklist page: right-click a tab with two Nook items, group tabs, detect page and text language, request `tabs` as an optional permission from a toolbar click, restore closed tabs, and the install warning text for the proposed permission set. | Confirms the Chromium probe holds in Helium. |
 
