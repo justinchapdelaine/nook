@@ -2,7 +2,14 @@
 
 This file is the single place for the rules of this repo. Read it before any change. There is no AGENTS.md; do not add one.
 
-Nook is a Chromium extension (Helium first) that adds AI features running only on the user's device. The background, open questions and reasoning are in [docs/discovery-brief.md](docs/discovery-brief.md). When a decision below changes, update this file in the same PR.
+Nook is a Chromium extension (Helium first) that adds AI features running only on the user's device.
+
+## Where things live
+
+- **CLAUDE.md** (this file): rules and locked decisions. Short, and always current. When a decision changes, update it here in the same PR.
+- **[docs/architecture.md](docs/architecture.md)**: the current design and module boundaries. Update it when the design changes.
+- **[docs/discovery-brief.md](docs/discovery-brief.md)**: the starting brief, a snapshot from 2026-11-26. Not kept up to date; use it for background and reasoning only.
+- New findings, plans and longer decision records go in new files under `docs/`, linked from here or from the architecture page.
 
 ## Product principles
 
@@ -35,6 +42,7 @@ Pending discovery. Not yet chosen: TypeScript or plain JavaScript, the build too
 
 - Keep changes to the requested work, with explicit contracts between modules rather than hidden coupling.
 - Keep it simple, and build only what is needed now. Remove duplication where it helps, not by reflex.
+- For extension work and any UI shown on web pages, use the Modern Web Guidance skills, including its Chrome extensions skill, rather than relying on memory of the APIs.
 - Update docs when a change makes them wrong. Record important knowledge in the repo or in code comments, not only in conversation.
 
 ## Git and pull requests
