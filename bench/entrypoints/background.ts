@@ -16,7 +16,17 @@ const MENUS: chrome.contextMenus.CreateProperties[] = [
   { id: "probe", title: "Nook Bench: test the model connection from this page", contexts: ["page"] },
 ];
 
-async function ensureOffscreen(): Promise<OffscreenEnsureResult> {
+let creating: Promise<OffscreenEnsureResult> | undefined;
+
+/** Creates the offscreen document if needed. Concurrent callers share one creation and all wait for it to be ready. */
+function ensureOffscreen(): Promise<OffscreenEnsureResult> {
+  creating ??= createOffscreen().finally(() => {
+    creating = undefined;
+  });
+  return creating;
+}
+
+async function createOffscreen(): Promise<OffscreenEnsureResult> {
   const start = performance.now();
   if (await chrome.offscreen.hasDocument()) return { created: false, ms: performance.now() - start };
   // createDocument can resolve before the document's script has added its port listener,

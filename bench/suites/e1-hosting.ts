@@ -64,45 +64,52 @@ export async function runHosting(ctx: RunContext) {
   result.offscreenCreateMs = (await ensureOffscreen()).ms;
 
   for (const client of [ctx.offscreen, ctx.sw]) {
-    const host: Record<string, unknown> = await loadTwice(ctx, client, model);
-    const idle = [];
-    for (const minutes of idleMinutes) {
-      // The service worker is known to stop after about 30 s; one 5-minute check is enough.
-      if (client.host === "sw" && minutes > 5) break;
-      const before = await client.request({ type: "status" });
-      idle.push(await idleCheck(ctx, client, model, before, minutes));
+    try {
+      const host: Record<string, unknown> = await loadTwice(ctx, client, model);
+      const idle = [];
+      for (const minutes of idleMinutes) {
+        // The service worker is known to stop after about 30 s; one 5-minute check is enough.
+        if (client.host === "sw" && minutes > 5) break;
+        const before = await client.request({ type: "status" });
+        idle.push(await idleCheck(ctx, client, model, before, minutes));
+      }
+      host.idle = idle;
+      result[client.host] = host;
+    } finally {
+      // Free GPU memory even when a step fails, so the next host or experiment starts clean.
+      await client.request({ type: "unload" }).catch(() => {});
     }
-    host.idle = idle;
-    await client.request({ type: "unload" });
-    result[client.host] = host;
   }
 
   if (ctx.options.e1Stop) {
-    await ctx.offscreen.request({ type: "load", modelId: model.id }, ctx.status);
-    const offBefore = await ctx.offscreen.request({ type: "status" });
-    const swBefore = await ctx.sw.request({ type: "status" });
-    ctx.offscreen.disconnect();
-    ctx.sw.disconnect();
-    const done = await ctx.askStep(
-      `Stop the Nook Bench service worker by hand: open chrome://serviceworker-internals in a new tab, find the entry for ` +
-        `chrome-extension://${chrome.runtime.id}/ and click Stop. Then come back here and press Done.`,
-    );
-    if (done) {
-      const start = performance.now();
-      const offAfter = await ctx.offscreen.request({ type: "status" });
-      const reply = await ctx.offscreen.request(PING);
-      const swAfter = await ctx.sw.request({ type: "status" });
-      result.manualStop = {
-        serviceWorkerRestarted: swAfter.startedAt !== swBefore.startedAt,
-        offscreenSurvived: offAfter.startedAt === offBefore.startedAt && offAfter.loaded?.modelId === model.id,
-        firstReplyAfterStopMs: performance.now() - start,
-        reply: speed(reply),
-      };
-      ctx.log(`After the stop: ${JSON.stringify(result.manualStop)}`);
-    } else {
-      result.manualStop = "skipped";
+    try {
+      await ctx.offscreen.request({ type: "load", modelId: model.id }, ctx.status);
+      const offBefore = await ctx.offscreen.request({ type: "status" });
+      const swBefore = await ctx.sw.request({ type: "status" });
+      ctx.offscreen.disconnect();
+      ctx.sw.disconnect();
+      const done = await ctx.askStep(
+        `Stop the Nook Bench service worker by hand: open chrome://serviceworker-internals in a new tab, find the entry for ` +
+          `chrome-extension://${chrome.runtime.id}/ and click Stop. Then come back here and press Done.`,
+      );
+      if (done) {
+        const start = performance.now();
+        const offAfter = await ctx.offscreen.request({ type: "status" });
+        const reply = await ctx.offscreen.request(PING);
+        const swAfter = await ctx.sw.request({ type: "status" });
+        result.manualStop = {
+          serviceWorkerRestarted: swAfter.startedAt !== swBefore.startedAt,
+          offscreenSurvived: offAfter.startedAt === offBefore.startedAt && offAfter.loaded?.modelId === model.id,
+          firstReplyAfterStopMs: performance.now() - start,
+          reply: speed(reply),
+        };
+        ctx.log(`After the stop: ${JSON.stringify(result.manualStop)}`);
+      } else {
+        result.manualStop = "skipped";
+      }
+    } finally {
+      await ctx.offscreen.request({ type: "unload" }).catch(() => {});
     }
-    await ctx.offscreen.request({ type: "unload" });
   }
   return result;
 }

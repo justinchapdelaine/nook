@@ -78,7 +78,11 @@ async function offscreenExists(): Promise<boolean> {
 }
 
 export async function ensureOffscreen(): Promise<OffscreenEnsureResult> {
-  return (await chrome.runtime.sendMessage({ type: "offscreen:ensure" })) as OffscreenEnsureResult;
+  const result = (await chrome.runtime.sendMessage({ type: "offscreen:ensure" })) as
+    | OffscreenEnsureResult
+    | { error: string };
+  if ("error" in result) throw new Error(`Could not open the offscreen document: ${result.error}`);
+  return result;
 }
 
 /** Closes the offscreen document. Drops the client's port first so no request goes to the closing document. */

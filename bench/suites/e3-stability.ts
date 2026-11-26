@@ -77,7 +77,7 @@ export async function runStability(ctx: RunContext) {
       }
 
       // Thinking on: reasoning text is expected here; if it never appears, the switch may do nothing.
-      const thinkingOn = { count: 0, withReasoning: 0, sample: "" };
+      const thinkingOn = { count: 0, withReasoning: 0, errors: 0, sample: "" };
       const thinkingPrompts = [
         translatePlain(sentence(0).text.eng, "eng", "fra"),
         translatePlain(sentence(1).text.eng, "eng", "jpn"),
@@ -85,10 +85,15 @@ export async function runStability(ctx: RunContext) {
       ];
       for (const messages of thinkingPrompts) {
         ctx.status(`${model.label}: thinking on, ${thinkingOn.count + 1} of ${thinkingPrompts.length}`);
-        const reply = await client.request(request(messages, 1024, { enableThinking: true }));
         thinkingOn.count++;
-        if (hasReasoning(reply.text)) thinkingOn.withReasoning++;
-        thinkingOn.sample ||= clip(reply.text, 200);
+        try {
+          const reply = await client.request(request(messages, 1024, { enableThinking: true }));
+          if (hasReasoning(reply.text)) thinkingOn.withReasoning++;
+          thinkingOn.sample ||= clip(reply.text, 200);
+        } catch (error) {
+          thinkingOn.errors++;
+          note("thinking on", "", String(error));
+        }
       }
 
       ctx.log(
