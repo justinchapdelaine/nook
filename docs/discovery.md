@@ -153,7 +153,7 @@ E7 needs no GPU and could also run in the Windows VM once Helium is installed th
 - The proof of concept is the benchmark extension. Building it covers the brief's phase 1 and doubles as the first use of the stack.
 - The tab right-click menu can carry *Group tabs* and *Close duplicates*, alongside the toolbar menu.
 - The manifest needs `'wasm-unsafe-eval'`, and Nook's model config lists only packaged libraries.
-- Once the stack is agreed, CLAUDE.md's Stack section and architecture.md's hosting decision get updated in the same change that sets the repo up.
+- The stack is now recorded in CLAUDE.md. The hosting decision goes into architecture.md once E1 has run.
 
 ## Sources
 
