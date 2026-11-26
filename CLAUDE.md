@@ -19,6 +19,7 @@ Nook is a Chromium extension (Helium first) that adds AI features running only o
 - **Reversible.** Tab moves, tab closes and page translations can always be undone or restored.
 - **User work first.** When work competes for the GPU, what the user is waiting on goes first.
 - **Modular.** The inference runtime and the model can be swapped without touching feature code.
+- **Modern stack.** Prefer current tooling and web platform features, checked against what Helium actually supports.
 
 ## Locked decisions
 
@@ -32,6 +33,7 @@ These are fixed. If one turns out not to work, raise it with a concrete reason r
 - **Restore by keeping the original nodes.** Never rebuild elements from saved `innerHTML`; keep the original nodes and swap their text back.
 - **Chrome Web Store ready from the start.** Minimal, justified permissions. No remotely hosted code: JS and Wasm (including WebLLM `model_lib` files) ship inside the package; only model weights are downloaded.
 - **Helium is the first browser to validate on.** Keep other Chromium browsers possible.
+- **Embeddings are deferred.** Tab grouping uses rules plus the LLM, so there is one model to download and keep loaded.
 - **Tabs only move when the user asks.** No automatic grouping of new tabs.
 
 ## Stack
