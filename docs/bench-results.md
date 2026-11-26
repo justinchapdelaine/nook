@@ -4,7 +4,7 @@ The first full run of [Nook Bench](../bench/README.md) on the owner's machine, 2
 
 **Machine:** Windows, 14 cores, 32 GB RAM, NVIDIA Blackwell GPU (WebGPU adapter with `shader-f16`, 2 GB max buffer). The browser reports itself as Chrome 158.0.8127.88. All models were the `q4f16` builds, run with temperature 0 and thinking off unless noted.
 
-GPU memory figures were read by hand from Task Manager and are the total in use, including about 1.6 GB taken by other programs at the time. Treat them as rough, and compare them with each other rather than read them as the model's own size.
+GPU memory was read by hand from Task Manager, which shows the total in use. The figures below subtract what other programs were using: about 1.6 GB, or the 1.4 GB recorded at the start of E4 for that experiment. They are rough. The same 0.8B model read as about 1.3 GB in E1 and about 0.3 GB in E2, so a single reading can be off by a gigabyte. WebLLM's own estimates are 2.2 GB for 2B and 1.6 GB for 0.8B.
 
 ## Decisions this supports
 
@@ -39,10 +39,10 @@ In the first run the service worker stopped in the middle of a short reply, and 
 
 Offscreen host. A screen is one of three fixture articles of five paragraphs, translated into French and into Japanese.
 
-| Model | Decode | Prefill | Seconds per screen | Total GPU memory |
+| Model | Decode | Prefill | Seconds per screen | GPU memory (rough) |
 | --- | --- | --- | --- | --- |
-| Qwen3.5-2B | 93 tokens/s | 1,315 tokens/s | 4.3 s | 2.5 GB |
-| Qwen3.5-0.8B | 100 tokens/s | 1,758 tokens/s | 6.3 s | 1.9 GB |
+| Qwen3.5-2B | 93 tokens/s | 1,315 tokens/s | 4.3 s | 0.9 GB |
+| Qwen3.5-0.8B | 100 tokens/s | 1,758 tokens/s | 6.3 s | 0.3 GB |
 
 0.8B decodes barely faster than 2B on this GPU, and it often writes longer, looser output (one Japanese screen ran to 1,214 tokens against about 300 for 2B), so it ends up slower per screen.
 
@@ -64,11 +64,11 @@ Offscreen host. A screen is one of three fixture articles of five paragraphs, tr
 
 Qwen3.5-2B, with a fact hidden in the middle of the prompt.
 
-| Context window | Prompt | Found the fact | Time to first token | Total GPU memory |
+| Context window | Prompt | Found the fact | Time to first token | GPU memory (rough) |
 | --- | --- | --- | --- | --- |
-| 4K | 2,065 tokens | Yes | 1.8 s | 2.6 GB |
-| 8K | 4,094 tokens | Yes | 3.5 s | 2.7 GB |
-| 16K | 8,085 tokens | Yes | 7.5 s | 2.8 GB |
+| 4K | 2,065 tokens | Yes | 1.8 s | 1.2 GB |
+| 8K | 4,094 tokens | Yes | 3.5 s | 1.3 GB |
+| 16K | 8,085 tokens | Yes | 7.5 s | 1.4 GB |
 
 A bigger window costs little memory (about 0.1 GB per step) and prefill stays near 1,100 tokens/s, so the window can be set by what the task needs. Long prompts are what cost time.
 
