@@ -44,7 +44,7 @@ Chosen after discovery; the reasoning is in [docs/discovery.md](docs/discovery.m
 - **Build:** WXT on Vite 8. Pin the WXT version and upgrade on purpose, since it is still 0.x. Turn off WXT's auto-imports.
 - **Format and lint:** Biome. All code goes through it.
 - **Tests:** Vitest (browser mode for DOM logic) and Playwright with headless Chromium for the built extension.
-- **Runtime:** Node 22 or later.
+- **Runtime:** Node 26, the current LTS line.
 - The extension page CSP includes `'wasm-unsafe-eval'`, which WebLLM needs.
 
 ## Engineering

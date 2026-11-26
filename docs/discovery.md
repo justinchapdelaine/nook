@@ -122,7 +122,7 @@ See [Stack](#stack).
 | Format and lint | Biome 2 | One fast tool for formatting and linting TypeScript, JSON and CSS, with one config file. ESLint plus Prettier works too but is two tools and slower. |
 | Unit tests | Vitest 5, in browser mode for DOM translator logic | Real DOM behaviour (text nodes, Shadow DOM, restore) matters more than a fake DOM. |
 | Extension tests | Playwright with the bundled Chromium | Loads the built extension headless, as the probe in this discovery did. |
-| Runtime | Node 22 or later, as WXT requires | |
+| Runtime | Node 26 (the current LTS line) | WXT needs Node 22 or later; 22 is in maintenance, and the spike also built on Node 26.13.1. |
 
 Spike result: a WXT project with a background service worker, an offscreen page, a module worker importing WebLLM and a runtime-registered content script built in 0.6 seconds. Total output was 6.1 MB, nearly all WebLLM. Loaded in Chromium 158, the worker imported WebLLM and saw WebGPU, and TypeScript 7 type-checked the project using WXT's generated config (it caught one real type error in the spike code).
 
