@@ -112,3 +112,8 @@ export function hasReasoning(reply: string): boolean {
     /^(okay|ok,|alright|let me|let's|first,|the user|we need to|i need to)/i.test(reply.trim())
   );
 }
+
+/** Removes the empty think block WebLLM puts in front of a reply when thinking is off. */
+export function stripEmptyThinkBlock(reply: string): string {
+  return reply.replace(/^\s*<think>\s*<\/think>\s*/, "");
+}

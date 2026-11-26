@@ -10,7 +10,7 @@ export default defineConfig({
   manifest: {
     name: "Nook Bench",
     // Bump when the harness changes; the results block records it.
-    version: "0.1.1",
+    version: "0.1.2",
     description: "Benchmarks for Nook: on-device model hosting, speed, memory and translation quality.",
     minimum_chrome_version: "153",
     permissions: [

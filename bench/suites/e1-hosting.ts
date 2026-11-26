@@ -31,7 +31,9 @@ async function loadTwice(ctx: RunContext, client: HostClient, model: BenchModel)
 
 /** Leaves a loaded host alone for `minutes`, then checks whether it kept the model. */
 async function idleCheck(ctx: RunContext, client: HostClient, model: BenchModel, before: HostStatus, minutes: number) {
-  client.disconnect();
+  // Drop both ports, so no open connection or message can keep either host awake.
+  ctx.offscreen.disconnect();
+  ctx.sw.disconnect();
   const start = Date.now();
   await ctx.sleep(minutes * 60_000, `${client.host} host idle`);
   const status = await client.request({ type: "status" });
@@ -75,6 +77,10 @@ export async function runHosting(ctx: RunContext) {
       }
       host.idle = idle;
       result[client.host] = host;
+    } catch (error) {
+      // A host failing (for example the service worker stopping mid-load) is itself a result.
+      ctx.log(`${client.host} host failed: ${error}`);
+      result[client.host] = { error: String(error) };
     } finally {
       // Free GPU memory even when a step fails, so the next host or experiment starts clean.
       await client.request({ type: "unload" }).catch(() => {});
@@ -95,13 +101,16 @@ export async function runHosting(ctx: RunContext) {
       if (done) {
         const start = performance.now();
         const offAfter = await ctx.offscreen.request({ type: "status" });
-        const reply = await ctx.offscreen.request(PING);
+        const offscreenSurvived = offAfter.startedAt === offBefore.startedAt && offAfter.loaded?.modelId === model.id;
+        // If the offscreen host lost the model, a reply would fail; record that instead.
+        const reply = offscreenSurvived ? speed(await ctx.offscreen.request(PING)) : null;
         const swAfter = await ctx.sw.request({ type: "status" });
         result.manualStop = {
           serviceWorkerRestarted: swAfter.startedAt !== swBefore.startedAt,
-          offscreenSurvived: offAfter.startedAt === offBefore.startedAt && offAfter.loaded?.modelId === model.id,
-          firstReplyAfterStopMs: performance.now() - start,
-          reply: speed(reply),
+          offscreenSurvived,
+          offscreenRestarted: offAfter.startedAt !== offBefore.startedAt,
+          firstReplyAfterStopMs: reply ? performance.now() - start : null,
+          reply,
         };
         ctx.log(`After the stop: ${JSON.stringify(result.manualStop)}`);
       } else {

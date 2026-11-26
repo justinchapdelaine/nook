@@ -73,6 +73,8 @@ export class HostClient {
 }
 
 async function offscreenExists(): Promise<boolean> {
+  // Content scripts have no getContexts; assume the document is there and let a failed request show it.
+  if (!chrome.runtime.getContexts) return true;
   const contexts = await chrome.runtime.getContexts({ contextTypes: [chrome.runtime.ContextType.OFFSCREEN_DOCUMENT] });
   return contexts.length > 0;
 }

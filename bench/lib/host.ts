@@ -6,6 +6,7 @@
 import { deleteModelAllInfoInCache, hasModelInCache, MLCEngine } from "@mlc-ai/web-llm";
 import { gpuInfo } from "./gpu";
 import { appConfig, findModel, libUrl, MODELS } from "./models";
+import { stripEmptyThinkBlock } from "./prompts";
 import type {
   GenerateRequest,
   GenerateResult,
@@ -121,7 +122,9 @@ async function generate(
     }
   }
   return {
-    text,
+    // With thinking off, WebLLM puts an empty think block in front of the reply and
+    // returns it as part of the text. Remove it so only the answer is checked and scored.
+    text: request.enableThinking ? text : stripEmptyThinkBlock(text),
     finishReason,
     promptTokens: usage?.prompt_tokens ?? 0,
     completionTokens: usage?.completion_tokens ?? 0,

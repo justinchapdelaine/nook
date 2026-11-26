@@ -8,6 +8,7 @@ import { markSentence, SENTENCES, sentence } from "../lib/fixtures";
 import type { MarkerCheck, MarkerFormat } from "../lib/markers";
 import { checkRuns, checkTagged, renderRuns, renderTagged, stringArraySchema } from "../lib/markers";
 import { translateBatch, translateRuns, translateTagged } from "../lib/prompts";
+import type { GenerateResult } from "../lib/protocol";
 import type { RunContext } from "./context";
 import { clip, preferredVariant, request, usable, withModel } from "./context";
 
@@ -28,7 +29,13 @@ async function markers(ctx: RunContext, to: Lang, format: MarkerFormat, index: n
         ? translateRuns(runs, "eng", to)
         : translateTagged(renderTagged(block, format), "eng", to, format);
     const jsonSchema = format === "runs" ? stringArraySchema(runs.length) : undefined;
-    const reply = await ctx.offscreen.request(request(messages, 384, { temperature, jsonSchema }));
+    let reply: GenerateResult;
+    try {
+      reply = await ctx.offscreen.request(request(messages, 384, { temperature, jsonSchema }));
+    } catch (error) {
+      // Count a failed request like a broken reply, so one error doesn't end the run.
+      return { check: { ok: false, reason: `request failed: ${error}`, plain: "" }, ms: 0, reply: "" };
+    }
     const check = format === "runs" ? checkRuns(reply.text, runs.length) : checkTagged(reply.text, block, format);
     return { check, ms: reply.totalMs, reply: reply.text };
   };
@@ -103,11 +110,18 @@ export async function runMarkers(ctx: RunContext) {
             const context = withContext
               ? { pageTitle: PAGE_TITLE, previous: i > 0 ? sentence(i - 1).text.eng : "" }
               : undefined;
-            const reply = await ctx.offscreen.request(
-              request(translateBatch(texts, "eng", to, context), 160 * texts.length, {
-                jsonSchema: stringArraySchema(texts.length),
-              }),
-            );
+            let reply: GenerateResult;
+            try {
+              reply = await ctx.offscreen.request(
+                request(translateBatch(texts, "eng", to, context), 160 * texts.length, {
+                  jsonSchema: stringArraySchema(texts.length),
+                }),
+              );
+            } catch (error) {
+              ctx.log(`Batch of ${size} to ${to} failed: ${error}`);
+              mappingFailures++;
+              continue;
+            }
             const check = checkRuns(reply.text, texts.length);
             if (!check.ok) {
               mappingFailures++;

@@ -33,49 +33,55 @@ export async function runSpeed(ctx: RunContext) {
   const results: Record<string, unknown> = {};
   for (const model of modelsToTest(ctx)) {
     const client = ctx.offscreen;
-    const run = await withModel(ctx, client, model, async () => {
-      await client.request(request([{ role: "user", content: "Hello" }], 8)); // warm-up
-      const decode = [];
-      for (let i = 0; i < 3; i++) {
-        ctx.status(`Decode run ${i + 1} of 3`);
-        decode.push(await client.request(DECODE));
-      }
-      const prefill = [];
-      for (let i = 0; i < 2; i++) {
-        ctx.status(`Prefill run ${i + 1} of 2`);
-        prefill.push(await client.request(PREFILL));
-      }
-      const screens = [];
-      for (const target of SCREEN_TARGETS) {
-        for (const [index, screen] of SCREENS.entries()) {
-          ctx.status(`Screen ${index + 1} to ${target}`);
-          const start = performance.now();
-          let outputTokens = 0;
-          let firstParagraph = "";
-          for (const text of [screen.title, ...screen.paragraphs]) {
-            const reply = await client.request(request(translatePlain(text, "eng", target), 512));
-            outputTokens += reply.completionTokens;
-            if (!firstParagraph && text !== screen.title) firstParagraph = reply.text;
-          }
-          const seconds = (performance.now() - start) / 1000;
-          ctx.log(`${model.label}: screen ${index + 1} to ${target} in ${seconds.toFixed(1)} s.`);
-          screens.push({ screen: index + 1, target, seconds, outputTokens, sample: clip(firstParagraph, 200) });
+    // One model failing (for example running out of GPU memory) shouldn't lose the others' results.
+    try {
+      const run = await withModel(ctx, client, model, async () => {
+        await client.request(request([{ role: "user", content: "Hello" }], 8)); // warm-up
+        const decode = [];
+        for (let i = 0; i < 3; i++) {
+          ctx.status(`Decode run ${i + 1} of 3`);
+          decode.push(await client.request(DECODE));
         }
-      }
-      const decodeTokS = median(decode.map((r) => r.decodeTokensPerS ?? Number.NaN));
-      const prefillTokS = median(prefill.map((r) => r.prefillTokensPerS ?? Number.NaN));
-      ctx.log(`${model.label}: decode ${decodeTokS?.toFixed(1)} tok/s, prefill ${prefillTokS?.toFixed(0)} tok/s.`);
-      return {
-        decodeTokS,
-        decodeTokens: decode.map((r) => r.completionTokens),
-        prefillTokS,
-        prefillPromptTokens: prefill[0]?.promptTokens,
-        ttftLongPromptMs: median(prefill.map((r) => r.ttftMs ?? Number.NaN)),
-        secondsPerScreen: median(screens.map((s) => s.seconds)),
-        screens,
-      };
-    });
-    results[model.id] = { loadMs: run.loadMs, vramGB: run.vramGB, ...run.result };
+        const prefill = [];
+        for (let i = 0; i < 2; i++) {
+          ctx.status(`Prefill run ${i + 1} of 2`);
+          prefill.push(await client.request(PREFILL));
+        }
+        const screens = [];
+        for (const target of SCREEN_TARGETS) {
+          for (const [index, screen] of SCREENS.entries()) {
+            ctx.status(`Screen ${index + 1} to ${target}`);
+            const start = performance.now();
+            let outputTokens = 0;
+            let firstParagraph = "";
+            for (const text of [screen.title, ...screen.paragraphs]) {
+              const reply = await client.request(request(translatePlain(text, "eng", target), 512));
+              outputTokens += reply.completionTokens;
+              if (!firstParagraph && text !== screen.title) firstParagraph = reply.text;
+            }
+            const seconds = (performance.now() - start) / 1000;
+            ctx.log(`${model.label}: screen ${index + 1} to ${target} in ${seconds.toFixed(1)} s.`);
+            screens.push({ screen: index + 1, target, seconds, outputTokens, sample: clip(firstParagraph, 200) });
+          }
+        }
+        const decodeTokS = median(decode.map((r) => r.decodeTokensPerS ?? Number.NaN));
+        const prefillTokS = median(prefill.map((r) => r.prefillTokensPerS ?? Number.NaN));
+        ctx.log(`${model.label}: decode ${decodeTokS?.toFixed(1)} tok/s, prefill ${prefillTokS?.toFixed(0)} tok/s.`);
+        return {
+          decodeTokS,
+          decodeTokens: decode.map((r) => r.completionTokens),
+          prefillTokS,
+          prefillPromptTokens: prefill[0]?.promptTokens,
+          ttftLongPromptMs: median(prefill.map((r) => r.ttftMs ?? Number.NaN)),
+          secondsPerScreen: median(screens.map((s) => s.seconds)),
+          screens,
+        };
+      });
+      results[model.id] = { loadMs: run.loadMs, vramGB: run.vramGB, ...run.result };
+    } catch (error) {
+      ctx.log(`${model.label} failed: ${error}`);
+      results[model.id] = { error: String(error) };
+    }
   }
   return { host: "offscreen", temperature: 0, models: results };
 }
