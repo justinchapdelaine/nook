@@ -12,4 +12,8 @@ Nook targets [Helium](https://helium.computer/) first and aims to work in other 
 
 ## Status
 
-Early discovery. No code or build tooling yet. See [docs/discovery-brief.md](docs/discovery-brief.md) for the starting context and open questions, and [CLAUDE.md](CLAUDE.md) for the rules that apply to all work in this repo.
+Early discovery. No code or build tooling yet. See [CLAUDE.md](CLAUDE.md) for the rules that apply to all work in this repo, [docs/architecture.md](docs/architecture.md) for the current design, and [docs/discovery-brief.md](docs/discovery-brief.md) for the starting context and open questions.
+
+## License
+
+[MIT](LICENSE)
