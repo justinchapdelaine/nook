@@ -80,10 +80,15 @@ export type HostResults = {
 };
 
 export type RequestEnvelope = { id: number; request: HostRequest };
+/** How often the host sends "alive" for each open request. */
+export const HEARTBEAT_MS = 5_000;
+
 export type ResponseEnvelope =
   | { id: number; kind: "result"; result: unknown }
   | { id: number; kind: "error"; error: string }
-  | { id: number; kind: "progress"; text: string };
+  | { id: number; kind: "progress"; text: string }
+  /** Sent every few seconds while a request is queued or running, so the client can tell a quiet host from a dead one. */
+  | { id: number; kind: "alive" };
 
 /** Messages to the service worker that are not host requests. */
 export type ControlMessage = { type: "offscreen:ensure" } | { type: "offscreen:close" } | { type: "offscreen:ready" };

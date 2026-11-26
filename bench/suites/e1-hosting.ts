@@ -11,22 +11,18 @@ import { preferredVariant, request, speed, usable } from "./context";
 
 const PING = request([{ role: "user", content: "Name three colours, separated by commas." }], 24);
 
-async function loadTwice(ctx: RunContext, client: HostClient, model: BenchModel) {
+/** Fills `host` step by step, so a host that fails partway still reports what it got through. */
+async function loadTwice(ctx: RunContext, client: HostClient, model: BenchModel, host: Record<string, unknown>) {
   const first = await client.request({ type: "load", modelId: model.id }, ctx.status);
+  host.firstLoadMs = first.ms;
   ctx.log(`${client.host}: first load ${(first.ms / 1000).toFixed(1)} s.`);
-  const firstReply = await client.request(PING);
+  host.firstReply = speed(await client.request(PING));
   await client.request({ type: "unload" });
   const repeat = await client.request({ type: "load", modelId: model.id }, ctx.status);
+  host.repeatLoadMs = repeat.ms;
   ctx.log(`${client.host}: repeat load ${(repeat.ms / 1000).toFixed(1)} s.`);
-  const repeatReply = await client.request(PING);
-  const vramGB = await ctx.askVram(`${model.label} loaded in the ${client.host} host`);
-  return {
-    firstLoadMs: first.ms,
-    firstReply: speed(firstReply),
-    repeatLoadMs: repeat.ms,
-    repeatReply: speed(repeatReply),
-    vramGB,
-  };
+  host.repeatReply = speed(await client.request(PING));
+  host.vramGB = await ctx.askVram(`${model.label} loaded in the ${client.host} host`);
 }
 
 /** Leaves a loaded host alone for `minutes`, then checks whether it kept the model. */
@@ -66,8 +62,10 @@ export async function runHosting(ctx: RunContext) {
   result.offscreenCreateMs = (await ensureOffscreen()).ms;
 
   for (const client of [ctx.offscreen, ctx.sw]) {
+    const host: Record<string, unknown> = {};
+    result[client.host] = host;
     try {
-      const host: Record<string, unknown> = await loadTwice(ctx, client, model);
+      await loadTwice(ctx, client, model, host);
       const idle = [];
       for (const minutes of idleMinutes) {
         // The service worker is known to stop after about 30 s; one 5-minute check is enough.
@@ -76,11 +74,10 @@ export async function runHosting(ctx: RunContext) {
         idle.push(await idleCheck(ctx, client, model, before, minutes));
       }
       host.idle = idle;
-      result[client.host] = host;
     } catch (error) {
       // A host failing (for example the service worker stopping mid-load) is itself a result.
       ctx.log(`${client.host} host failed: ${error}`);
-      result[client.host] = { error: String(error) };
+      host.error = String(error);
     } finally {
       // Free GPU memory even when a step fails, so the next host or experiment starts clean.
       await client.request({ type: "unload" }).catch(() => {});

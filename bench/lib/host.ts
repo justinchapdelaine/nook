@@ -17,6 +17,7 @@ import type {
   RequestEnvelope,
   ResponseEnvelope,
 } from "./protocol";
+import { HEARTBEAT_MS } from "./protocol";
 
 const startedAt = Date.now();
 const config = appConfig(self.location.origin);
@@ -76,12 +77,15 @@ export function createHost(host: HostName) {
   /** Serves one request envelope; requests run one at a time, in order. */
   function serve(envelope: RequestEnvelope, send: (response: ResponseEnvelope) => void): void {
     const { id, request } = envelope;
+    const heartbeat = setInterval(() => send({ id, kind: "alive" }), HEARTBEAT_MS);
     const task = queue.then(() => run(request, (text) => send({ id, kind: "progress", text })));
     queue = task.catch(() => {});
-    task.then(
-      (result) => send({ id, kind: "result", result }),
-      (error: unknown) => send({ id, kind: "error", error: error instanceof Error ? error.message : String(error) }),
-    );
+    task
+      .finally(() => clearInterval(heartbeat))
+      .then(
+        (result) => send({ id, kind: "result", result }),
+        (error: unknown) => send({ id, kind: "error", error: error instanceof Error ? error.message : String(error) }),
+      );
   }
 
   return { serve };

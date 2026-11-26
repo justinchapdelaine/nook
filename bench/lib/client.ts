@@ -2,6 +2,12 @@
 // content script. Connects lazily; if the port drops (for example the
 // service worker stopped), pending requests fail and the next request
 // reconnects.
+//
+// The other contexts that listen for ports keep a port open after its host
+// dies (Chrome can stop the service worker in the middle of a reply), so a
+// disconnect is not guaranteed. The host sends "alive" every few seconds per
+// open request; if a pending request hears nothing for SILENCE_LIMIT_MS, the
+// client treats the host as stopped and fails every pending request.
 import type {
   HostName,
   HostRequest,
@@ -10,18 +16,23 @@ import type {
   RequestEnvelope,
   ResponseEnvelope,
 } from "./protocol";
-import { portName } from "./protocol";
+import { HEARTBEAT_MS, portName } from "./protocol";
+
+/** Longer than a heartbeat gap plus a slow WebLLM step that blocks the host's thread. */
+const SILENCE_LIMIT_MS = 12 * HEARTBEAT_MS;
 
 type Pending = {
   resolve: (value: unknown) => void;
   reject: (error: Error) => void;
   onProgress?: (text: string) => void;
+  heardAt: number;
 };
 
 export class HostClient {
   private port: chrome.runtime.Port | undefined;
   private nextId = 1;
   private pending = new Map<number, Pending>();
+  private watchdog: ReturnType<typeof setInterval> | undefined;
 
   constructor(readonly host: HostName) {}
 
@@ -32,7 +43,8 @@ export class HostClient {
     const port = await this.connect();
     const id = this.nextId++;
     return new Promise((resolve, reject) => {
-      this.pending.set(id, { resolve: resolve as (value: unknown) => void, reject, onProgress });
+      this.pending.set(id, { resolve: resolve as (value: unknown) => void, reject, onProgress, heardAt: Date.now() });
+      this.watchdog ??= setInterval(() => this.checkSilence(), HEARTBEAT_MS);
       port.postMessage({ id, request } satisfies RequestEnvelope);
     });
   }
@@ -55,8 +67,11 @@ export class HostClient {
     port.onMessage.addListener((message: ResponseEnvelope) => {
       const pending = this.pending.get(message.id);
       if (!pending) return;
+      pending.heardAt = Date.now();
+      if (message.kind === "alive") return;
       if (message.kind === "progress") return pending.onProgress?.(message.text);
       this.pending.delete(message.id);
+      if (this.pending.size === 0) this.stopWatchdog();
       if (message.kind === "result") pending.resolve(message.result);
       else pending.reject(new Error(message.error));
     });
@@ -65,8 +80,24 @@ export class HostClient {
     return port;
   }
 
+  private checkSilence(): void {
+    const now = Date.now();
+    for (const pending of this.pending.values()) {
+      if (now - pending.heardAt < SILENCE_LIMIT_MS) continue;
+      this.port?.disconnect();
+      this.dropped(new Error(`${this.host} host stopped responding (nothing heard for ${SILENCE_LIMIT_MS / 1000} s)`));
+      return;
+    }
+  }
+
+  private stopWatchdog(): void {
+    clearInterval(this.watchdog);
+    this.watchdog = undefined;
+  }
+
   private dropped(error: Error): void {
     this.port = undefined;
+    this.stopWatchdog();
     for (const pending of this.pending.values()) pending.reject(error);
     this.pending.clear();
   }
