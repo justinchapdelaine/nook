@@ -1,5 +1,7 @@
 # Nook — Discovery Brief
 
+> This brief is a snapshot from 2026-11-26 and is not kept up to date. For current rules and decisions see [CLAUDE.md](../CLAUDE.md), and for the current design see [architecture.md](architecture.md).
+
 Nov 26, 2026 · @Justin Chapdelaine
 
 ## How to use this brief
