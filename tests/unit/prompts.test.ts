@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { tabLists } from "../../bench/lib/fixtures";
-import { checkGrouping, hasReasoning } from "../../bench/lib/prompts";
+import { checkGrouping, hasReasoning, stripEmptyThinkBlock } from "../../bench/lib/prompts";
 
 describe("checkGrouping", () => {
   const good =
@@ -40,5 +40,14 @@ describe("tabLists", () => {
       expect(new Set(list).size).toBe(list.length);
     }
     expect(tabLists(20)).toEqual(lists);
+  });
+});
+
+describe("stripEmptyThinkBlock", () => {
+  it("removes only an empty think block at the start", () => {
+    expect(stripEmptyThinkBlock("<think>\n\n</think>\n\nBonjour")).toBe("Bonjour");
+    expect(hasReasoning(stripEmptyThinkBlock("<think>\n\n</think>\n\nBonjour"))).toBe(false);
+    expect(stripEmptyThinkBlock("<think>hmm</think>Bonjour")).toBe("<think>hmm</think>Bonjour");
+    expect(stripEmptyThinkBlock('["a"]')).toBe('["a"]');
   });
 });
