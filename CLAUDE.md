@@ -38,7 +38,14 @@ These are fixed. If one turns out not to work, raise it with a concrete reason r
 
 ## Stack
 
-Pending discovery. Not yet chosen: TypeScript or plain JavaScript, the build tool (Vite, WXT or similar), and the formatter and linter. Do not add build tooling until these are decided and recorded here. Once chosen, all code goes through the formatter and linter.
+Chosen after discovery; the reasoning is in [docs/discovery.md](docs/discovery.md#stack).
+
+- **Language:** TypeScript 7.
+- **Build:** WXT on Vite 8, with WXT's auto-imports turned off so every file imports what it uses.
+- **Format and lint:** Biome. All code goes through it.
+- **Tests:** Vitest (browser mode for DOM logic) and Playwright with headless Chromium for the built extension.
+- **Runtime:** Node 26, the current LTS line.
+- The extension page CSP includes `'wasm-unsafe-eval'`, which WebLLM needs.
 
 ## Engineering
 
