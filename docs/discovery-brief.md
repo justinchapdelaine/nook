@@ -1,20 +1,14 @@
 # Nook — Discovery Brief
 
-> This brief is a snapshot from 2026-11-26 and is not kept up to date. For current rules and decisions see [CLAUDE.md](../CLAUDE.md), and for the current design see [architecture.md](architecture.md).
-
 Nov 26, 2026 · @Justin Chapdelaine
 
-## How to use this brief
+> This brief is a snapshot from 2026-11-26 and is not kept up to date. For current rules and decisions see [CLAUDE.md](../CLAUDE.md), and for the current design see [architecture.md](architecture.md).
 
-This is starting context for discovery, not an implementation plan. It records what was decided during an exploratory conversation and why, what we learned, and what is still open.
+## About this brief
 
-Your job as the agent:
+This was the starting context for discovery, not an implementation plan. It records what was decided during an exploratory conversation and why, what was learned, and what was still open. Facts here were checked on 2026-11-26; library versions, model availability and browser behaviour move fast.
 
-1. Read it and verify anything that may have changed. Library versions, model availability and browser behaviour move fast; facts here were checked on 2026-11-26.
-2. Research the open questions and run small experiments where that is the only way to answer them.
-3. Then write the actual plan with the owner.
-
-Treat **locked decisions** as fixed unless you find a concrete reason they can't work; if so, raise it rather than routing around it. Everything else, including file structure, libraries beyond WebLLM, prompts and build tooling, is yours to propose.
+Locked decisions are fixed unless there is a concrete reason they can't work. Everything else, including file structure, libraries beyond WebLLM, prompts and build tooling, was left open for discovery to propose.
 
 ## What Nook is
 
@@ -168,14 +162,6 @@ A starting order, not a commitment; each phase is defined by what's true when it
 | Automatic grouping of newly opened tabs | Rejected | Tabs moving on their own is jarring; grouping only on request. |
 | Target-language submenu | Rejected | Browser language by default, one setting to change it. |
 | Placeholder shapes while translating | Rejected | They hide the original and shift the layout; a gentle pulse is used instead. |
-
-## What we want back
-
-1. A short list of anything in this brief that is outdated or wrong, with sources.
-2. Answers or experiment plans for each open question.
-3. A draft implementation plan for review: architecture, project setup, phase breakdown with done-when criteria, and the risks you see.
-
-Tooling: install the [Modern Web Guidance](https://developer.chrome.com/blog/modern-web-guidance-v1) skills, including its Chrome extensions skill, and use them for extension and in-page UI work.
 
 ## References
 
