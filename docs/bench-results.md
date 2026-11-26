@@ -4,6 +4,8 @@ The first full run of [Nook Bench](../bench/README.md) on the owner's machine, 2
 
 **Machine:** Windows, 14 cores, 32 GB RAM, NVIDIA Blackwell GPU (WebGPU adapter with `shader-f16`, 2 GB max buffer). The browser reports itself as Chrome 158.0.8127.88. All models were the `q4f16` builds, run with temperature 0 and thinking off unless noted.
 
+GPU memory figures were read by hand from Task Manager and are the total in use, including about 1.6 GB taken by other programs at the time. Treat them as rough, and compare them with each other rather than read them as the model's own size.
+
 ## Decisions this supports
 
 - **Host the engine in an offscreen document, in a dedicated worker.** The service worker lost the model every time it was left alone, and once it was stopped in the middle of a reply. Now recorded in [architecture.md](architecture.md).
@@ -37,7 +39,7 @@ In the first run the service worker stopped in the middle of a short reply, and 
 
 Offscreen host. A screen is one of three fixture articles of five paragraphs, translated into French and into Japanese.
 
-| Model | Decode | Prefill | Seconds per screen | VRAM in use |
+| Model | Decode | Prefill | Seconds per screen | Total GPU memory |
 | --- | --- | --- | --- | --- |
 | Qwen3.5-2B | 93 tokens/s | 1,315 tokens/s | 4.3 s | 2.5 GB |
 | Qwen3.5-0.8B | 100 tokens/s | 1,758 tokens/s | 6.3 s | 1.9 GB |
@@ -62,7 +64,7 @@ Offscreen host. A screen is one of three fixture articles of five paragraphs, tr
 
 Qwen3.5-2B, with a fact hidden in the middle of the prompt.
 
-| Context window | Prompt | Found the fact | Time to first token | VRAM |
+| Context window | Prompt | Found the fact | Time to first token | Total GPU memory |
 | --- | --- | --- | --- | --- |
 | 4K | 2,065 tokens | Yes | 1.8 s | 2.6 GB |
 | 8K | 4,094 tokens | Yes | 3.5 s | 2.7 GB |
@@ -118,5 +120,10 @@ Batches of 4 save about 15% with no quality loss and no blocks mapped back to th
 - Requesting the optional `tabs` permission from a toolbar menu click worked. The prompt read "Read your browsing history".
 - The extension page lists "Read your browsing history on all your signed-in devices" and "View and manage your tab groups" as its permissions.
 - A content script reached the offscreen document directly; a status request took 1.8 ms.
-- The automatic part of E7 hung after grouping the test tabs, so language detection, `publicSuffix` and tab restore still need a run in Helium. The harness now logs each step and times out stuck calls.
+- `chrome.tabs.detectLanguage` never answers in Helium: the call was still pending after 20 seconds. In headless Chromium 158 the same call returns `fr` for the French test tab within a second, so this is Helium's doing. Nook should work out a page's language itself, from the page's `lang` attribute and `chrome.i18n.detectLanguage` on a sample of its text.
+- `chrome.i18n.detectLanguage` works in Helium and identified all eleven test languages correctly, each as reliable (Tagalog is reported as `fil`).
+- Tab groups work: three tabs grouped, named "Nook test" and coloured blue, and the group showed in the tab strip.
+- `publicSuffix` works: `news.bbc.co.uk` gives `bbc.co.uk`, `foo.github.io` stays whole, `localhost` gives nothing.
+- Closing a tab and restoring it through `sessions` worked, and the closed tab's URL was visible.
+- The UI language reads as `en-GB`.
 - The console showed only the expected warning that `powerPreference` is ignored on Windows.
