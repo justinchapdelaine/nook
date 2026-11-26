@@ -29,6 +29,8 @@ describe("hasReasoning", () => {
     expect(hasReasoning("Bonjour tout le monde")).toBe(false);
     expect(hasReasoning("<think>\n\n</think>\n\nBonjour")).toBe(false);
     expect(hasReasoning("<think>The user wants French")).toBe(true);
+    expect(hasReasoning("The user wants French.</think>Bonjour")).toBe(true);
+    expect(hasReasoning("</think>Bonjour")).toBe(false);
   });
 });
 

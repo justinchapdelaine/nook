@@ -107,9 +107,14 @@ export function checkGrouping(reply: string, tabCount: number): GroupingCheck {
 
 /** Signs that a reply contains reasoning instead of (or before) the answer. */
 export function hasReasoning(reply: string): boolean {
-  // An empty <think></think> block is the model choosing not to reason, so it does not count.
-  const think = reply.match(/<think>([\s\S]*?)(<\/think>|$)/i);
-  if (think) return (think[1] ?? "").trim().length > 0;
+  // Text inside a think block is reasoning; an empty block is the model choosing not to reason.
+  // The opening tag can be missing when the chat template already put it in the prompt.
+  const opened = /<think>/i.test(reply);
+  const closedAt = reply.search(/<\/think>/i);
+  if (opened || closedAt >= 0) {
+    const inside = reply.slice(0, closedAt >= 0 ? closedAt : undefined).replace(/^[\s\S]*?<think>/i, "");
+    return inside.trim().length > 0;
+  }
   return /^(okay|ok,|alright|let me|let's|first,|the user|we need to|i need to)/i.test(reply.trim());
 }
 
