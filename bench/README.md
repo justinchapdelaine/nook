@@ -40,7 +40,7 @@ Three things learned while building it, worth keeping for the real extension:
 
 - `chrome.offscreen.createDocument` can resolve before the document's script has added its `runtime.onConnect` listener, and a port opened in that gap never reaches it. The document now sends a ready message and the service worker waits for it.
 - A port opened with `runtime.connect` reaches every extension context with a listener, including the service worker. If the service worker disconnects a port meant for the offscreen document, the port closes for everyone, so it must ignore it instead. That also means a client gets no disconnect when the offscreen document closes, so it checks `runtime.getContexts` before reusing a port.
-- For the same reason, a client gets no disconnect when Chrome stops the service worker in the middle of a request (seen in Helium during E1). Each host sends an "alive" message every 5 seconds per open request, and the client fails its requests after 60 seconds of silence.
+- For the same reason, a client gets no disconnect when Chrome stops the service worker in the middle of a request (seen in Helium during E1). Each host sends an "alive" message every 5 seconds per open request, and the client fails its requests after 60 seconds of silence. The heartbeat shows the host is alive, not that a request is moving: a generation stuck inside a live host would still wait forever, which has not been seen so far.
 
 ## Commands
 
