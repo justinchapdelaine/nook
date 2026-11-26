@@ -107,7 +107,18 @@ This describes what we want each feature to do, not how to build it.
 
 The features are separated from inference so the runtime and model can change without touching feature code. These boundaries are the intent; names, file layout and APIs are open.
 
-_(The original brief had a diagram here of the module boundaries, from the browser surfaces down to the runtime. It did not survive export.)_
+Only the runtime module knows about WebLLM:
+
+```mermaid
+flowchart TD
+    menu["Page context menu"] --> dom["DOM translator<br/>Blocks, inline markers, exact restore"]
+    toolbar["Toolbar icon, its menu, shortcuts"] --> tabs["Tab manager<br/>Rules, then LLM; duplicates; undo"]
+    dom --> task["Task layer<br/>translate(segments, source, target) and groupTabs(tabs); picks model and prompt"]
+    tabs --> task
+    task --> sched["Scheduler<br/>One GPU queue; what the user is waiting on runs first"]
+    sched --> runtime["Inference runtime<br/>WebLLM; service worker or offscreen (TBD)"]
+    config["Model config<br/>Weights downloaded, .wasm bundled"] --> runtime
+```
 
 Requests flow down from the browser surfaces. Only the inference runtime talks to WebLLM, and the model list is configuration, so a fine-tuned or newer model is a config change. The DOM translator only sends text segments and receives translations; it never sees a model.
 
