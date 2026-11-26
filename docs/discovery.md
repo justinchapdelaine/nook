@@ -117,7 +117,7 @@ See [Stack](#stack).
 | Area | Recommendation | Why |
 | --- | --- | --- |
 | Language | TypeScript 7 (the native compiler, 7.0.2) | The module boundaries are message contracts between the service worker, offscreen document, worker and content scripts; types make them explicit. WebLLM and Chrome APIs ship types. Type checks with the native compiler are fast. TypeScript 7 doesn't yet offer the old compiler's JavaScript API, so a tool that imports it could break; WXT's build and type checks worked in the spike. |
-| Build | WXT 0.21 on Vite 8 | Handles the multi-entry MV3 build: manifest generation, content scripts bundled as single files, offscreen and options pages, dev reload and zipping. WXT is still 0.x, so minor versions can break; pin the version and upgrade on purpose. |
+| Build | WXT 0.21 on Vite 8 | Handles the multi-entry MV3 build: manifest generation, content scripts bundled as single files, offscreen and options pages, dev reload and zipping. WXT is still 0.x, so a minor version can break things; the default `^0.21` range already stays within 0.21, so no extra pinning is needed. |
 | Fallback build | Plain Vite with a small manifest step, or the CRXJS Vite plugin (3.0) | If WXT's conventions get in the way. Content script bundling is the part that is painful to do by hand. |
 | Format and lint | Biome 2 | One fast tool for formatting and linting TypeScript, JSON and CSS, with one config file. ESLint plus Prettier works too but is two tools and slower. |
 | Unit tests | Vitest 5, in browser mode for DOM translator logic | Real DOM behaviour (text nodes, Shadow DOM, restore) matters more than a fake DOM. |
@@ -126,7 +126,7 @@ See [Stack](#stack).
 
 Spike result: a WXT project with a background service worker, an offscreen page, a module worker importing WebLLM and a runtime-registered content script built in 0.6 seconds. Total output was 6.1 MB, nearly all WebLLM. Loaded in Chromium 158, the worker imported WebLLM and saw WebGPU, and TypeScript 7 type-checked the project using WXT's generated config (it caught one real type error in the spike code).
 
-WXT detail to decide during setup: turn off its auto-imports, so every module's dependencies are visible in its imports.
+WXT's auto-imports are turned off, so every module's dependencies are visible in its imports, in line with the rule on explicit contracts between modules.
 
 ## Experiments
 

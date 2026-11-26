@@ -41,7 +41,7 @@ These are fixed. If one turns out not to work, raise it with a concrete reason r
 Chosen after discovery; the reasoning is in [docs/discovery.md](docs/discovery.md#stack).
 
 - **Language:** TypeScript 7.
-- **Build:** WXT on Vite 8. Pin the WXT version and upgrade on purpose, since it is still 0.x. Turn off WXT's auto-imports.
+- **Build:** WXT on Vite 8, with WXT's auto-imports turned off so every file imports what it uses.
 - **Format and lint:** Biome. All code goes through it.
 - **Tests:** Vitest (browser mode for DOM logic) and Playwright with headless Chromium for the built extension.
 - **Runtime:** Node 26, the current LTS line.
