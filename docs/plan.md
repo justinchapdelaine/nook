@@ -135,5 +135,6 @@ English into Japanese and Chinese scores about 31 chrF, partly because chrF coun
 
 ## Testing
 
-- `npm run check` and `npm test` on every PR, and the Playwright suite against the built extension in headless Chromium 158. The cloud has no GPU, so tests cover everything except model output: tasks are tested with a fake runtime that returns scripted replies, which also covers the fallbacks.
-- Anything that needs the real model is a manual run in Helium on the owner's machine, with the steps in the PR.
+- `npm run check` and `npm test` on every PR, and the Playwright suite against the built extension in headless Chromium 158. Most task tests use a fake runtime that returns scripted replies, which is fast and also covers the fallbacks.
+- **Real-model smoke test in the cloud.** Headless Chromium there has a software WebGPU adapter (SwiftShader) with no `shader-f16`, so it can run the `q4f32` builds but not `q4f16`. A small, separate Playwright suite loads Qwen3.5-0.8B `q4f32` in the offscreen host and runs a handful of short prompts: one sentence translated, a few tabs grouped with JSON output, a cancel mid-reply. It checks that the real model, runtime, prompts and output checks work end to end, not speed or quality. It is slow, so it runs on demand rather than on every PR, and it skips itself when the weights can't be downloaded. Today the cloud network policy blocks huggingface.co, so it needs that host allowed first.
+- Speed, memory, quality and the `q4f16` builds need a real GPU: a manual run in Helium on the owner's machine, with the steps in the PR, or a bench build for numbers.
