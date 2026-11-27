@@ -93,4 +93,37 @@ describe("host", () => {
     host.disconnected(1);
     expect((await pending.done).at(-1)).toMatchObject({ kind: "error", code: "cancelled" });
   });
+
+  it("doesn't start a reply cancelled while the model loaded", async () => {
+    const engine = fakeEngine();
+    let generated = 0;
+    const generate0 = engine.generate;
+    engine.generate = (...args) => {
+      generated++;
+      return generate0(...args);
+    };
+    const host = createHost(engine, () => {});
+    await call(host, 1, 1, { id: 1, request: { type: "download", family: "Qwen3.5-2B" } }).done;
+    await call(host, 1, 2, { id: 2, request: { type: "download", family: "Qwen3.5-0.8B" } }).done;
+    // 2B is cached but not loaded, so this request loads it first; cancel it meanwhile.
+    const pending = call(host, 1, 3, { id: 3, request: { type: "generate", request: generate("user") } });
+    host.receive(1, { id: 3, cancel: true }, () => {});
+    expect((await pending.done).at(-1)).toMatchObject({ kind: "error", code: "cancelled" });
+    expect(generated).toBe(0);
+  });
+
+  it("loads the model again after a failed reply", async () => {
+    const engine = fakeEngine();
+    const host = createHost(engine, () => {});
+    await call(host, 1, 1, { id: 1, request: { type: "download", family: "Qwen3.5-2B" } }).done;
+    const generate0 = engine.generate;
+    engine.generate = async () => {
+      engine.generate = generate0;
+      throw new Error("Device lost");
+    };
+    const failed = await call(host, 1, 2, { id: 2, request: { type: "generate", request: generate("user") } }).done;
+    expect(failed.at(-1)).toMatchObject({ kind: "error", error: "Device lost" });
+    await call(host, 1, 3, { id: 3, request: { type: "generate", request: generate("user") } }).done;
+    expect(engine.loads).toEqual(["Qwen3.5-2B-q4f16_1-MLC", "Qwen3.5-2B-q4f16_1-MLC"]);
+  });
 });

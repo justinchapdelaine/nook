@@ -48,6 +48,7 @@ export function createEngine(): Engine {
     unload: () => engine.unload(),
     remove: (build) => deleteModelAllInfoInCache(build.id, config),
     async generate(request, onDelta, signal) {
+      if (signal.aborted) return { finishReason: "abort" };
       const stop = () => void engine.interruptGenerate();
       signal.addEventListener("abort", stop, { once: true });
       try {

@@ -14,17 +14,28 @@ const nameOf = (code: string) => names.of(code) ?? code;
 
 let current: BubbleView | undefined;
 
+/** Text selected inside a focused text field, which the document's selection doesn't include. */
+function fieldSelection(): string {
+  const field = document.activeElement;
+  if (!(field instanceof HTMLInputElement || field instanceof HTMLTextAreaElement)) return "";
+  const { selectionStart: start, selectionEnd: end } = field;
+  // Inputs without text selection (such as checkboxes) report null.
+  return start !== null && end !== null ? field.value.slice(start, end) : "";
+}
+
 export async function translateSelection(client: HostClient, fallbackText = ""): Promise<void> {
   current?.close();
   const selection = getSelection();
   const range = selection && selection.rangeCount > 0 ? selection.getRangeAt(0) : undefined;
-  const text = (selection?.toString() || fallbackText).trim();
+  const text = (selection?.toString() || fieldSelection() || fallbackText).trim();
   const anchor = range?.getBoundingClientRect();
   // With nothing selected, or a selection inside a form field (which has no useful rectangle), show it near the top.
   const where = anchor && (anchor.width > 0 || anchor.height > 0) ? anchor : new DOMRect(innerWidth - 16, 16, 0, 0);
 
   let cancel: (() => void) | undefined;
+  let closed = false;
   const bubble = openBubble(where, () => {
+    closed = true;
     cancel?.();
     if (current === bubble) current = undefined;
   });
@@ -41,6 +52,8 @@ export async function translateSelection(client: HostClient, fallbackText = ""):
   const near = container instanceof Element ? container : (container?.parentElement ?? null);
   const from = await detectLanguage(text, near);
   const to = settings.targetLanguage;
+  // Closed while the settings or the language were read: there is nothing to translate for.
+  if (closed) return;
   if (from && sameLanguage(from, to)) return bubble.setStatus(`This is already in ${nameOf(to)}.`);
 
   const fromLabel = from ? `from ${nameOf(from)}` : "";

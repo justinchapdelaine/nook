@@ -93,16 +93,25 @@ export function createHost(engine: Engine, onBusyChange: (busy: boolean) => void
                 throw new HostError("not-downloaded", `${familyOf(family).label} isn't downloaded yet`);
               await load(build, send, id);
             }
+            // Cancelled or preempted while the model loaded: don't start the reply.
+            if (signal.aborted) return { text: "", finishReason: "abort" };
             let text = "";
-            const { finishReason } = await engine.generate(
-              rest,
-              (delta) => {
-                text += delta;
-                send({ id, kind: "delta", text: delta });
-              },
-              signal,
-            );
-            return { text, finishReason };
+            try {
+              const { finishReason } = await engine.generate(
+                rest,
+                (delta) => {
+                  text += delta;
+                  send({ id, kind: "delta", text: delta });
+                },
+                signal,
+              );
+              return { text, finishReason };
+            } catch (error) {
+              // A failed reply (for example a lost GPU device) can leave the engine without
+              // its pipeline, so load the model again next time rather than trust it.
+              loaded = undefined;
+              throw error;
+            }
           },
         });
       }
