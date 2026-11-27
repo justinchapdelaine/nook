@@ -156,7 +156,8 @@ test("undo brings back a group that closing its duplicate tabs emptied", async (
   }
 
   expect(await run(page, "undo")).toEqual({ action: "undo", count: 2 });
-  expect(await windowTabs(page)).toEqual(before);
+  // A tab reopened by URL reports an empty URL until its navigation commits.
+  await expect.poll(() => windowTabs(page)).toEqual(before);
 });
 
 test("group by site groups by registrable domain, and undo puts every tab back", async ({ context }) => {
