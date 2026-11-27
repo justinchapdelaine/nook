@@ -16,14 +16,8 @@ export interface DuplicateCandidate {
  * the oldest. Pinned tabs are never closed.
  */
 export function findDuplicates(tabs: readonly DuplicateCandidate[]): number[] {
-  const byPage = new Map<string, DuplicateCandidate[]>();
-  for (const tab of tabs) {
-    if (!isWebUrl(tab.url)) continue;
-    const key = normalizeUrl(tab.url);
-    const list = byPage.get(key);
-    if (list) list.push(tab);
-    else byPage.set(key, [tab]);
-  }
+  const web = tabs.filter((tab): tab is DuplicateCandidate & { url: string } => isWebUrl(tab.url));
+  const byPage = Map.groupBy(web, (tab) => normalizeUrl(tab.url));
   const close: number[] = [];
   for (const list of byPage.values()) {
     if (list.length < 2) continue;

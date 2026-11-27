@@ -59,17 +59,16 @@ export function planSiteGroups(
   groups: readonly ExistingGroup[],
   siteOf: (hostname: string) => string,
 ): SiteGroup[] {
-  const bySite = new Map<string, number[]>();
-  for (const tab of tabs) {
-    if (tab.pinned || tab.groupId !== NO_GROUP || !isWebUrl(tab.url)) continue;
+  const movable = tabs.filter(
+    (tab): tab is GroupCandidate & { url: string } => !tab.pinned && tab.groupId === NO_GROUP && isWebUrl(tab.url),
+  );
+  const bySite = Map.groupBy(movable, (tab) => {
     const url = new URL(tab.url);
-    const site = url.protocol === "file:" ? "Files" : siteOf(url.hostname);
-    const list = bySite.get(site);
-    if (list) list.push(tab.id);
-    else bySite.set(site, [tab.id]);
-  }
+    return url.protocol === "file:" ? "Files" : siteOf(url.hostname);
+  });
   const plan: SiteGroup[] = [];
-  for (const [title, tabIds] of bySite) {
+  for (const [title, siteTabs] of bySite) {
+    const tabIds = siteTabs.map((tab) => tab.id);
     const existing = groups.find((group) => group.title === title);
     if (existing) plan.push({ title, color: colorFor(title), tabIds, groupId: existing.id });
     else if (tabIds.length >= 2) plan.push({ title, color: colorFor(title), tabIds });

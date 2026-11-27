@@ -9,6 +9,8 @@ const accessButton = document.querySelector("#access-button") as HTMLButtonEleme
 
 let granted = false;
 
+const logError = (what: string) => (error: unknown) => console.error(`Nook: ${what} failed`, error);
+
 async function showAccess(): Promise<void> {
   granted = await chrome.permissions.contains(TABS_PERMISSION);
   access.textContent = granted
@@ -18,15 +20,12 @@ async function showAccess(): Promise<void> {
   accessButton.hidden = false;
 }
 
-accessButton.addEventListener("click", async () => {
+accessButton.addEventListener("click", () => {
   // The request must be the first call in the click handler, or the click no
-  // longer counts as a user gesture.
-  try {
-    await (granted ? chrome.permissions.remove(TABS_PERMISSION) : chrome.permissions.request(TABS_PERMISSION));
-  } catch (error) {
-    console.error("Nook: changing tab access failed", error);
-  }
-  await showAccess();
+  // longer counts as a user gesture. The permission listeners below update
+  // the page once access changes.
+  const change = granted ? chrome.permissions.remove(TABS_PERMISSION) : chrome.permissions.request(TABS_PERMISSION);
+  change.catch(logError("changing tab access"));
 });
 
 async function showShortcuts(): Promise<void> {
@@ -47,12 +46,9 @@ async function showShortcuts(): Promise<void> {
 
 document.querySelector("#change-shortcuts")?.addEventListener("click", () => {
   // A page can't link to browser pages, but it can open one in a new tab.
-  chrome.tabs
-    .create({ url: "chrome://extensions/shortcuts" })
-    .catch((error: unknown) => console.error("Nook: opening shortcut settings failed", error));
+  chrome.tabs.create({ url: "chrome://extensions/shortcuts" }).catch(logError("opening shortcut settings"));
 });
 
-const logError = (what: string) => (error: unknown) => console.error(`Nook: ${what} failed`, error);
 const refreshAccess = () => showAccess().catch(logError("reading tab access"));
 
 chrome.permissions.onAdded.addListener(refreshAccess);

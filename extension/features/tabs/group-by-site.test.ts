@@ -1,6 +1,6 @@
 import { expect, test } from "vitest";
 import type { GroupCandidate } from "./group-by-site";
-import { colorFor, GROUP_COLORS, planSiteGroups } from "./group-by-site";
+import { colorFor, GROUP_COLORS, NO_GROUP, planSiteGroups } from "./group-by-site";
 
 // Stands in for chrome.publicSuffix: the last two labels, or three for co.uk.
 const siteOf = (host: string) =>
@@ -13,7 +13,7 @@ const tab = (id: number, url: string, extra: Partial<GroupCandidate> = {}): Grou
   id,
   url,
   pinned: false,
-  groupId: -1,
+  groupId: NO_GROUP,
   ...extra,
 });
 

@@ -4,7 +4,10 @@
 // restart, and the browser clears it when it closes. Only the last change is
 // kept; an action that changes nothing leaves the previous record alone.
 
-const KEY = "tabs.undo";
+import type { GroupColor } from "./group-by-site";
+
+/** The chrome.storage.session key that holds the record. */
+export const UNDO_KEY = "tabs.undo";
 
 /** Where a tab was before a grouping moved it. */
 export interface MovedTab {
@@ -21,7 +24,7 @@ export interface ClosedTab {
   pinned: boolean;
   groupId: number;
   /** The tab's group's look, so undo can make the group again if the close emptied it. */
-  group?: { title?: string; color: `${chrome.tabGroups.Color}` };
+  group?: { title?: string; color: GroupColor };
   /** The browser's recently closed entry for this tab, when it could be found right after the close. */
   sessionId?: string;
 }
@@ -29,13 +32,16 @@ export interface ClosedTab {
 export type UndoRecord = { kind: "group"; tabs: MovedTab[] } | { kind: "close"; tabs: ClosedTab[] };
 
 export async function saveUndo(record: UndoRecord): Promise<void> {
-  await chrome.storage.session.set({ [KEY]: record });
+  await chrome.storage.session.set({ [UNDO_KEY]: record });
 }
 
 /** Reads and clears the record, so one change is undone at most once. */
 export async function takeUndo(): Promise<UndoRecord | undefined> {
-  const { [KEY]: record } = await chrome.storage.session.get(KEY);
-  await chrome.storage.session.remove(KEY);
+  // Storage runs calls in the order they are made, so the read sees the record.
+  const [{ [UNDO_KEY]: record }] = await Promise.all([
+    chrome.storage.session.get(UNDO_KEY),
+    chrome.storage.session.remove(UNDO_KEY),
+  ]);
   return record as UndoRecord | undefined;
 }
 

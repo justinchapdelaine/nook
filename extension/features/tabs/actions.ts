@@ -129,7 +129,8 @@ async function reopen(record: Extract<UndoRecord, { kind: "close" }>): Promise<n
     // for the later tabs of a bulk close is after the earlier ones went.
     // Placing each tab in order of its old index puts them all back.
     if (reopened.windowId === tab.windowId) await chrome.tabs.move(reopened.id, { index: tab.index }).catch(() => {});
-    if (tab.groupId !== NO_GROUP && reopened.groupId === NO_GROUP) await regroup(reopened, tab, regrouped);
+    if (tab.groupId !== NO_GROUP && reopened.groupId === NO_GROUP)
+      await regroup(reopened.id, reopened.windowId, tab, regrouped);
   }
   // Restoring focuses each tab, and maybe its window, in turn; give focus back
   // to the tab and window the user was on.
@@ -145,15 +146,16 @@ async function reopen(record: Extract<UndoRecord, { kind: "close" }>): Promise<n
  * the browser removed it, so the first tab back makes it again with the same
  * title and colour, and the others join it.
  */
-async function regroup(reopened: chrome.tabs.Tab, tab: ClosedTab, regrouped: Map<number, number>): Promise<void> {
-  if (reopened.id === undefined) return;
-  const tabIds = reopened.id;
+async function regroup(
+  tabIds: number,
+  windowId: number,
+  tab: ClosedTab,
+  regrouped: Map<number, number>,
+): Promise<void> {
   const groupId = regrouped.get(tab.groupId) ?? tab.groupId;
   const joined = await chrome.tabs.group({ groupId, tabIds }).catch(() => undefined);
   if (joined !== undefined || !tab.group) return;
-  const created = await chrome.tabs
-    .group({ tabIds, createProperties: { windowId: reopened.windowId } })
-    .catch(() => {});
+  const created = await chrome.tabs.group({ tabIds, createProperties: { windowId } }).catch(() => {});
   if (created === undefined) return;
   regrouped.set(tab.groupId, created);
   await chrome.tabGroups.update(created, tab.group).catch(() => {});

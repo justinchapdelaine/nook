@@ -1,5 +1,6 @@
 import type { BrowserContext, Page } from "@playwright/test";
 import type { TabAction, TabActionResult } from "../../extension/core/messages";
+import { UNDO_KEY } from "../../extension/features/tabs/undo";
 import { expect, nookTest as test } from "./fixtures";
 
 /** Opens the settings page, which serves as the test's window into the extension. */
@@ -45,6 +46,15 @@ async function windowTabs(page: Page) {
     const { id: windowId } = await chrome.windows.getCurrent();
     const groups = new Map((await chrome.tabGroups.query({ windowId })).map((g) => [g.id, g.title]));
     return (await chrome.tabs.query({ windowId })).map((t) => ({ url: t.url, group: groups.get(t.groupId) }));
+  });
+}
+
+/** Closes the rightmost tab in the settings page's window, as the user would. */
+async function closeLastTab(page: Page) {
+  await page.evaluate(async () => {
+    const tabs = await chrome.tabs.query({ currentWindow: true });
+    const last = tabs[tabs.length - 1];
+    if (last?.id !== undefined) await chrome.tabs.remove(last.id);
   });
 }
 
@@ -104,19 +114,15 @@ test("undo restores the tabs Nook closed, not a later tab the user closed at the
   const before = await windowTabs(page);
   expect(await run(page, "close-duplicates")).toEqual({ action: "close-duplicates", count: 1 });
   // Nook found its own recently closed entry, so undo can restore the tab with its history.
-  const sessionId = await page.evaluate(async () => {
-    const { "tabs.undo": record } = await chrome.storage.session.get("tabs.undo");
+  const sessionId = await page.evaluate(async (key) => {
+    const { [key]: record } = await chrome.storage.session.get(key);
     return (record as { tabs: { sessionId?: string }[] }).tabs[0]?.sessionId;
-  });
+  }, UNDO_KEY);
   expect(sessionId).toEqual(expect.any(String));
 
   // The user opens the same address again and closes it themselves.
   await openTabs(context, ["http://a.example.com/x#part"]);
-  await page.evaluate(async () => {
-    const tabs = await chrome.tabs.query({ currentWindow: true });
-    const last = tabs[tabs.length - 1];
-    if (last?.id !== undefined) await chrome.tabs.remove(last.id);
-  });
+  await closeLastTab(page);
   const userEntry = await page.evaluate(async () => (await chrome.sessions.getRecentlyClosed())[0]?.tab?.sessionId);
 
   expect(await run(page, "undo")).toEqual({ action: "undo", count: 1 });
@@ -145,11 +151,7 @@ test("undo brings back a group that closing its duplicate tabs emptied", async (
   // reopen by URL and make the group itself.
   for (let i = 0; i < 25; i++) {
     await openTabs(context, [`http://filler.test/${i}`]);
-    await page.evaluate(async () => {
-      const tabs = await chrome.tabs.query({ currentWindow: true });
-      const last = tabs[tabs.length - 1];
-      if (last?.id !== undefined) await chrome.tabs.remove(last.id);
-    });
+    await closeLastTab(page);
   }
 
   expect(await run(page, "undo")).toEqual({ action: "undo", count: 2 });

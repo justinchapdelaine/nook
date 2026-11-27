@@ -1,8 +1,9 @@
 import { expect, test } from "vitest";
+import { NO_GROUP } from "./group-by-site";
 import type { ClosedTab } from "./undo";
 import { findOwnEntries } from "./undo";
 
-const closed = (url: string): ClosedTab => ({ url, windowId: 1, index: 0, pinned: false, groupId: -1 });
+const closed = (url: string): ClosedTab => ({ url, windowId: 1, index: 0, pinned: false, groupId: NO_GROUP });
 
 test("pairs each closed tab with an entry its own close created, by URL, each entry once", () => {
   const after = [

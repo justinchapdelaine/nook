@@ -1,4 +1,5 @@
 import { defineConfig } from "wxt";
+import type { TabAction } from "./core/messages";
 
 // Nook, the extension. Phase 1 holds the model-free tab tools only; the
 // model, its host and the translator arrive in later phases (docs/plan.md).
@@ -33,7 +34,8 @@ export default defineConfig({
         "group-tabs": { suggested_key: { default: "Alt+Shift+G" }, description: "Group tabs by site" },
         "close-duplicates": { suggested_key: { default: "Alt+Shift+D" }, description: "Close duplicate tabs" },
         undo: { suggested_key: { default: "Alt+Shift+U" }, description: "Undo the last tab change" },
-      },
+        // Each command is a tab action, so a renamed action can't silently lose its shortcut.
+      } satisfies Record<TabAction, { suggested_key: { default: string }; description: string }>,
       content_security_policy: {
         // WebLLM (phase 2) compiles its model library, WebAssembly, at runtime.
         extension_pages: "script-src 'self' 'wasm-unsafe-eval'; object-src 'self'",
