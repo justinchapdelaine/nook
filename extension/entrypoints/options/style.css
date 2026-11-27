@@ -1,0 +1,40 @@
+:root {
+  color-scheme: light dark;
+  font-family: system-ui, sans-serif;
+  line-height: 1.5;
+}
+
+body {
+  margin: 0;
+  background: Canvas;
+  color: CanvasText;
+}
+
+main {
+  max-width: 40rem;
+  margin: 0 auto;
+  padding: 2rem 1rem;
+}
+
+.lead {
+  color: color-mix(in srgb, CanvasText 70%, Canvas);
+}
+
+dl {
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  gap: 0.25rem 1rem;
+}
+
+dt {
+  font-family: ui-monospace, monospace;
+}
+
+dd {
+  margin: 0;
+}
+
+button {
+  font: inherit;
+  padding: 0.25rem 0.75rem;
+}
