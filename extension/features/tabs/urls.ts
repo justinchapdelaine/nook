@@ -44,6 +44,7 @@ export function normalizeUrl(url: string): string {
   parsed.hash = "";
   // The query is always rewritten, not only when a parameter goes, so that
   // both URLs of a pair get the same encoding ("%20" and "+" both become "+").
+  // This also writes `?a` as `?a=`, which servers treat as the same.
   const kept = [...parsed.searchParams].filter(([name]) => !isTrackingParam(name));
   parsed.search = new URLSearchParams(kept).toString();
   return parsed.href;

@@ -24,16 +24,19 @@ export async function groupBySite(windowId: number): Promise<number> {
   const moved: MovedTab[] = tabs.flatMap((t) =>
     t.id !== undefined && moving.has(t.id) ? [{ id: t.id, windowId: t.windowId, index: t.index }] : [],
   );
-  // Saved before the change, so undo still covers a change that stops halfway.
-  await saveUndo({ kind: "group", tabs: moved });
+  let saved = false;
   for (const group of plan) {
     const tabIds = group.tabIds as [number, ...number[]];
-    if (group.groupId !== undefined) {
-      await chrome.tabs.group({ groupId: group.groupId, tabIds });
-    } else {
-      const groupId = await chrome.tabs.group({ tabIds, createProperties: { windowId } });
-      await chrome.tabGroups.update(groupId, { title: group.title, color: group.color });
+    const groupId = await chrome.tabs.group(
+      group.groupId !== undefined ? { groupId: group.groupId, tabIds } : { tabIds, createProperties: { windowId } },
+    );
+    // Saved once the first tabs have moved: a grouping that fails at once
+    // keeps the previous undo, and one that stops halfway can still be undone.
+    if (!saved) {
+      await saveUndo({ kind: "group", tabs: moved });
+      saved = true;
     }
+    if (group.groupId === undefined) await chrome.tabGroups.update(groupId, { title: group.title, color: group.color });
   }
   return moving.size;
 }
@@ -47,30 +50,40 @@ export async function closeDuplicates(windowId: number): Promise<number> {
   if (ids.length === 0) return 0;
   const closing = new Set(ids);
   const [recent, groups] = await Promise.all([recentlyClosedTabs(), chrome.tabGroups.query({ windowId })]);
-  const closed: ClosedTab[] = tabs.flatMap((t) => {
+  const targets: { id: number; tab: ClosedTab }[] = tabs.flatMap((t) => {
     if (t.id === undefined || !t.url || !closing.has(t.id)) return [];
     const group = groups.find((g) => g.id === t.groupId);
     return [
       {
-        url: t.url,
-        windowId: t.windowId,
-        index: t.index,
-        pinned: t.pinned,
-        groupId: t.groupId,
-        ...(group && { group: { title: group.title, color: group.color } }),
+        id: t.id,
+        tab: {
+          url: t.url,
+          windowId: t.windowId,
+          index: t.index,
+          pinned: t.pinned,
+          groupId: t.groupId,
+          ...(group && { group: { title: group.title, color: group.color } }),
+        },
       },
     ];
   });
-  // The record is saved only once the tabs are gone, so a close that fails
-  // (say, the user closed one of them first) can't leave an undo that would
-  // open copies of tabs that are still open.
-  await chrome.tabs.remove(ids);
+  // One remove per tab: a single call with every id stops at the first tab
+  // that is already gone (say, the user closed it first), after closing the
+  // ones before it. The record then lists exactly the tabs that closed, so
+  // undo can't open copies of tabs that are still open.
+  const results = await Promise.allSettled(targets.map(({ id }) => chrome.tabs.remove(id)));
+  const closed = targets.filter((_, i) => results[i]?.status === "fulfilled").map(({ tab }) => tab);
+  if (closed.length === 0) {
+    const failure = results.find((r) => r.status === "rejected");
+    if (failure) throw failure.reason;
+    return 0;
+  }
   // Note which recently closed entries are Nook's, so undo restores those and
   // not a tab the user closes later at the same address.
   const before = new Set(recent.map((r) => r.sessionId));
   const own = findOwnEntries(closed, before, await recentlyClosedTabs());
   await saveUndo({ kind: "close", tabs: closed.map((tab, i) => ({ ...tab, sessionId: own[i] })) });
-  return ids.length;
+  return closed.length;
 }
 
 async function recentlyClosedTabs(): Promise<RecentTab[]> {
@@ -129,8 +142,11 @@ async function reopen(record: Extract<UndoRecord, { kind: "close" }>): Promise<n
     // for the later tabs of a bulk close is after the earlier ones went.
     // Placing each tab in order of its old index puts them all back.
     if (reopened.windowId === tab.windowId) await chrome.tabs.move(reopened.id, { index: tab.index }).catch(() => {});
-    if (tab.groupId !== NO_GROUP && reopened.groupId === NO_GROUP)
-      await regroup(reopened.id, reopened.windowId, tab, regrouped);
+    if (tab.groupId === NO_GROUP) continue;
+    // A restored tab may come back in a group the browser made again; later
+    // tabs from the same old group then join that one instead of a copy.
+    if (reopened.groupId !== NO_GROUP) regrouped.set(tab.groupId, reopened.groupId);
+    else await regroup(reopened.id, reopened.windowId, tab, regrouped);
   }
   // Restoring focuses each tab, and maybe its window, in turn; give focus back
   // to the tab and window the user was on.

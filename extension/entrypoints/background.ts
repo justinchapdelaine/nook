@@ -33,6 +33,9 @@ let queue: Promise<unknown> = Promise.resolve();
  */
 function runTabAction(action: TabAction, windowId: number | undefined): Promise<TabActionResult> {
   const granted = chrome.permissions.request(TABS_PERMISSION);
+  // runAfter handles a refusal, maybe only after an earlier action finishes;
+  // mark it handled now so the worker doesn't log it as uncaught meanwhile.
+  granted.catch(() => {});
   const previous = queue;
   const result = runAfter(previous, action, windowId, granted);
   queue = result;
