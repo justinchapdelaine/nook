@@ -1,6 +1,48 @@
+# Dependencies
 node_modules/
+
+# WXT build output, generated types and packaged zips
 .output/
 .wxt/
+*.zip
+*.crx
+*.pem
+
+# Vite and TypeScript caches
+dist/
+.vite/
+*.tsbuildinfo
+
+# Model libraries fetched at build time (see scripts/fetch-model-libs.ts)
 bench/public/model-libs/
+
+# Test output: Vitest coverage and browser-mode screenshots, Playwright reports
+coverage/
+__screenshots__/
 test-results/
 playwright-report/
+blob-report/
+playwright/.cache/
+
+# Local environment and secrets
+.env
+.env.*
+!.env.example
+
+# Claude Code local settings (the shared .claude/settings.json is tracked)
+.claude/settings.local.json
+
+# Logs
+*.log
+npm-debug.log*
+
+# OS and editor files
+.DS_Store
+Thumbs.db
+desktop.ini
+.idea/
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.json
+*.swp
+*~
