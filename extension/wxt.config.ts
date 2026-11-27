@@ -32,7 +32,7 @@ export default defineConfig({
       commands: {
         "group-tabs": { suggested_key: { default: "Alt+Shift+G" }, description: "Group tabs by site" },
         "close-duplicates": { suggested_key: { default: "Alt+Shift+D" }, description: "Close duplicate tabs" },
-        undo: { suggested_key: { default: "Alt+Shift+Z" }, description: "Undo the last tab change" },
+        undo: { suggested_key: { default: "Alt+Shift+U" }, description: "Undo the last tab change" },
       },
       content_security_policy: {
         // WebLLM (phase 2) compiles its model library, WebAssembly, at runtime.

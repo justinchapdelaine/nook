@@ -64,6 +64,8 @@ test("the settings page lists the shortcuts and shows tab access", async ({ cont
     "Close duplicate tabs",
     "Undo the last tab change",
   ]);
+  // Every suggested key was accepted; the browser leaves a key it refuses unset.
+  await expect(page.locator("#shortcuts dt")).toHaveText(["Alt+Shift+G", "Alt+Shift+D", "Alt+Shift+U"]);
 });
 
 test("close duplicates keeps one tab per page, and undo brings the others back", async ({ context }) => {

@@ -47,5 +47,5 @@ Not made yet: store icon (128 by 128), at least one screenshot (1280 by 800), sm
 
 ## Review notes
 
-- The keyboard shortcuts (Alt+Shift+G, Alt+Shift+D, Alt+Shift+Z) need no permission.
+- The keyboard shortcuts (Alt+Shift+G, Alt+Shift+D, Alt+Shift+U) need no permission.
 - The extension page content security policy allows `'wasm-unsafe-eval'` for the on-device model that arrives in a later version. No WebAssembly ships in 0.1.0.
