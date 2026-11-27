@@ -33,22 +33,38 @@ let queue: Promise<unknown> = Promise.resolve();
  */
 function runTabAction(action: TabAction, windowId: number | undefined): Promise<TabActionResult> {
   const granted = chrome.permissions.request(TABS_PERMISSION);
-  const result = queue.then(async (): Promise<TabActionResult> => {
-    try {
-      if (!(await granted)) return { action, count: 0, error: "no-permission" };
+  const previous = queue;
+  const result = runAfter(previous, action, windowId, granted);
+  queue = result;
+  return result;
+}
+
+async function runAfter(
+  previous: Promise<unknown>,
+  action: TabAction,
+  windowId: number | undefined,
+  granted: Promise<boolean>,
+): Promise<TabActionResult> {
+  await previous;
+  let result: TabActionResult;
+  try {
+    if (!(await granted)) {
+      result = { action, count: 0, error: "no-permission" };
+    } else {
       const target = windowId ?? (await chrome.windows.getLastFocused()).id;
       if (target === undefined) throw new Error("No browser window is open");
-      return { action, count: await RUN[action](target) };
-    } catch (error) {
-      console.error(`Nook: ${action} failed`, error);
-      return { action, count: 0, error: error instanceof Error ? error.message : String(error) };
+      result = { action, count: await RUN[action](target) };
     }
-  });
-  queue = result;
-  return result.then(async (r) => {
-    await report(r).catch((error: unknown) => console.error("Nook: badge update failed", error));
-    return r;
-  });
+  } catch (error) {
+    console.error(`Nook: ${action} failed`, error);
+    result = { action, count: 0, error: error instanceof Error ? error.message : String(error) };
+  }
+  try {
+    await report(result);
+  } catch (error) {
+    console.error("Nook: badge update failed", error);
+  }
+  return result;
 }
 
 const plural = (n: number, word: string) => `${n} ${word}${n === 1 ? "" : "s"}`;
@@ -71,7 +87,7 @@ function report({ action, count, error }: TabActionResult): Promise<void> {
 export default defineBackground({
   type: "module",
   main() {
-    void clearBadge();
+    clearBadge().catch((error: unknown) => console.error("Nook: badge reset failed", error));
 
     chrome.runtime.onInstalled.addListener(async () => {
       await chrome.contextMenus.removeAll();
@@ -81,7 +97,11 @@ export default defineBackground({
 
     chrome.contextMenus.onClicked.addListener((info, tab) => {
       if (isTabAction(info.menuItemId)) void runTabAction(info.menuItemId, tab?.windowId);
-      else if (info.menuItemId === SETTINGS_MENU) void chrome.runtime.openOptionsPage();
+      else if (info.menuItemId === SETTINGS_MENU) {
+        chrome.runtime
+          .openOptionsPage()
+          .catch((error: unknown) => console.error("Nook: opening settings failed", error));
+      }
     });
 
     chrome.commands.onCommand.addListener((command, tab) => {
@@ -90,7 +110,8 @@ export default defineBackground({
 
     chrome.runtime.onMessage.addListener((message: NookMessage, sender, sendResponse) => {
       if (message?.type !== "tabs:run" || !isTabAction(message.action)) return false;
-      runTabAction(message.action, sender.tab?.windowId).then(sendResponse);
+      // runTabAction makes its permission request before this awaits anything.
+      void (async () => sendResponse(await runTabAction(message.action, sender.tab?.windowId)))();
       return true;
     });
   },

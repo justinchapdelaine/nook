@@ -18,7 +18,7 @@ async function run(page: Page, action: TabAction): Promise<TabActionResult> {
       new Promise<TabActionResult>((resolve) => {
         document.addEventListener(
           "click",
-          () => chrome.runtime.sendMessage({ type: "tabs:run", action }).then(resolve),
+          async () => resolve(await chrome.runtime.sendMessage({ type: "tabs:run", action })),
           {
             once: true,
           },

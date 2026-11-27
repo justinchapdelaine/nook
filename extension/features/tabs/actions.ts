@@ -160,11 +160,20 @@ async function regroup(reopened: chrome.tabs.Tab, tab: ClosedTab, regrouped: Map
 }
 
 async function reopenByUrl(tab: ClosedTab): Promise<chrome.tabs.Tab | undefined> {
-  return (
-    chrome.tabs
-      .create({ url: tab.url, windowId: tab.windowId, index: tab.index, pinned: tab.pinned, active: false })
-      // The window may have closed since; open the tab in the current one.
-      .catch(() => chrome.tabs.create({ url: tab.url, pinned: tab.pinned, active: false }))
-      .catch(() => undefined)
-  );
+  try {
+    return await chrome.tabs.create({
+      url: tab.url,
+      windowId: tab.windowId,
+      index: tab.index,
+      pinned: tab.pinned,
+      active: false,
+    });
+  } catch {
+    // The window may have closed since; open the tab in the current one.
+    try {
+      return await chrome.tabs.create({ url: tab.url, pinned: tab.pinned, active: false });
+    } catch {
+      return undefined;
+    }
+  }
 }

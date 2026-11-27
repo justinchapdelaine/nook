@@ -21,7 +21,11 @@ async function showAccess(): Promise<void> {
 accessButton.addEventListener("click", async () => {
   // The request must be the first call in the click handler, or the click no
   // longer counts as a user gesture.
-  await (granted ? chrome.permissions.remove(TABS_PERMISSION) : chrome.permissions.request(TABS_PERMISSION));
+  try {
+    await (granted ? chrome.permissions.remove(TABS_PERMISSION) : chrome.permissions.request(TABS_PERMISSION));
+  } catch (error) {
+    console.error("Nook: changing tab access failed", error);
+  }
   await showAccess();
 });
 
@@ -43,10 +47,15 @@ async function showShortcuts(): Promise<void> {
 
 document.querySelector("#change-shortcuts")?.addEventListener("click", () => {
   // A page can't link to browser pages, but it can open one in a new tab.
-  void chrome.tabs.create({ url: "chrome://extensions/shortcuts" });
+  chrome.tabs
+    .create({ url: "chrome://extensions/shortcuts" })
+    .catch((error: unknown) => console.error("Nook: opening shortcut settings failed", error));
 });
 
-chrome.permissions.onAdded.addListener(() => void showAccess());
-chrome.permissions.onRemoved.addListener(() => void showAccess());
-void showAccess();
-void showShortcuts();
+const logError = (what: string) => (error: unknown) => console.error(`Nook: ${what} failed`, error);
+const refreshAccess = () => showAccess().catch(logError("reading tab access"));
+
+chrome.permissions.onAdded.addListener(refreshAccess);
+chrome.permissions.onRemoved.addListener(refreshAccess);
+refreshAccess();
+showShortcuts().catch(logError("listing shortcuts"));
