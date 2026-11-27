@@ -15,25 +15,34 @@ interface Fixtures {
 }
 
 interface WorkerFixtures {
-  /** Port of a local web server that answers every path with the same small page. */
+  /** Port of a local web server that answers each path in PAGES with that page, and any other with a small test page. */
   sitePort: number;
 }
+
+/** Fixed pages the test server knows, by path. */
+const PAGES: Record<string, string> = {
+  "/french": `<!doctype html><html lang="en"><title>Article</title>
+    <p id="text">Le chat dort sur le canapé depuis ce matin, et personne ne veut le réveiller.</p>`,
+  "/english": `<!doctype html><html lang="en"><title>Article</title>
+    <p id="text">The cat has been asleep on the sofa since this morning, and nobody wants to wake it.</p>`,
+};
 
 /**
  * A Playwright test that loads one built extension in headless Chromium.
  * Every host name resolves to a local web server, so tests can open tabs on
  * any site (`https` is not served, so use `http://` URLs).
  */
-function extensionTest(outputDir: string) {
+function extensionTest(outputDir: string, { network = false } = {}) {
   const extension = join(ROOT, outputDir);
   return base.extend<Fixtures, WorkerFixtures>({
     sitePort: [
       // biome-ignore lint/correctness/noEmptyPattern: Playwright fixtures need the object pattern.
       async ({}, use) => {
-        // The page never echoes the request, so nothing a test sends can end up as markup.
-        const server = createServer((_request, response) => {
-          response.setHeader("content-type", "text/html");
-          response.end("<!doctype html><title>Test page</title><p>Test page");
+        // The pages are fixed and never echo the request, so nothing a test sends can end up as markup.
+        const server = createServer((request, response) => {
+          response.setHeader("content-type", "text/html; charset=utf-8");
+          const path = URL.parse(request.url ?? "/", "http://localhost")?.pathname ?? "/";
+          response.end(PAGES[path] ?? "<!doctype html><title>Test page</title><p>Test page");
         });
         await new Promise<void>((resolve) => server.listen(0, "127.0.0.1", resolve));
         await use((server.address() as AddressInfo).port);
@@ -48,8 +57,12 @@ function extensionTest(outputDir: string) {
           `--disable-extensions-except=${extension}`,
           `--load-extension=${extension}`,
           "--enable-unsafe-webgpu",
-          `--host-resolver-rules=MAP * 127.0.0.1:${sitePort}`,
+          // With network on, only example.com goes to the local server and the rest to the internet.
+          `--host-resolver-rules=MAP ${network ? "example.com" : "*"} 127.0.0.1:${sitePort}`,
         ],
+        // The cloud test environment reaches the internet through a proxy.
+        proxy:
+          network && process.env.HTTPS_PROXY ? { server: process.env.HTTPS_PROXY, bypass: "example.com" } : undefined,
       });
       await use(context);
       await context.close();
@@ -69,5 +82,11 @@ export const benchTest = extensionTest("bench/.output/chrome-mv3");
 
 /** Nook, built for tests (npm run build:e2e): the same as the store build, but with tab access granted at install. */
 export const nookTest = extensionTest("extension/.output/chrome-mv3-e2e");
+
+/**
+ * Nook with the real WebLLM engine (npm run build:smoke), for the real-model
+ * smoke test. It can reach the internet, to download model weights.
+ */
+export const smokeTest = extensionTest("extension/.output/chrome-mv3-smoke", { network: true });
 
 export const expect = base.expect;
