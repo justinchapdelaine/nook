@@ -1,6 +1,6 @@
 # Architecture
 
-This is the current design and is kept up to date as it changes. The reasoning behind it is in [discovery-brief.md](discovery-brief.md). Module names, file layout and APIs are still open until discovery settles them.
+This is the current design and is kept up to date as it changes. The reasoning behind it is in [discovery-brief.md](discovery-brief.md). The planned file layout and phases are in [plan.md](plan.md); this page changes as they land.
 
 ## Module boundaries
 
