@@ -63,6 +63,11 @@ export function createEngine(): Engine {
         const filter = createThinkFilter();
         let finishReason: string | null = null;
         for await (const chunk of chunks) {
+          // An abort while create() was pending fired before generation began, so stop here.
+          if (signal.aborted) {
+            void engine.interruptGenerate();
+            break;
+          }
           const choice = chunk.choices[0];
           const text = choice?.delta?.content ? filter(choice.delta.content) : "";
           if (text) onDelta(text);

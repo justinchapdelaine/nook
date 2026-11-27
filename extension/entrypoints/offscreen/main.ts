@@ -22,7 +22,18 @@ function checkIdle(): void {
   if (busy || ports.size > 0) return;
   idleTimer = setTimeout(() => {
     closing = true;
-    chrome.runtime.sendMessage({ type: "offscreen:idle" } satisfies OffscreenMessage).catch(() => {});
+    // If the service worker never closes this document (the message failed, or it was busy),
+    // stop turning clients away and wait for the next idle period instead.
+    const reopen = () => {
+      if (!closing) return;
+      closing = false;
+      checkIdle();
+    };
+    const fallback = setTimeout(reopen, 10_000);
+    chrome.runtime.sendMessage({ type: "offscreen:idle" } satisfies OffscreenMessage).catch(() => {
+      clearTimeout(fallback);
+      reopen();
+    });
   }, idleMs);
 }
 

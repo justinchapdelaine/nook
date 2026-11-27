@@ -115,6 +115,11 @@ export function createHost(engine: Engine, onBusyChange: (busy: boolean) => void
           },
         });
       }
+      default: {
+        // A client from another version of the extension can send a type this host doesn't know.
+        const type = (request as { type?: unknown }).type;
+        return { result: Promise.reject(new Error(`Unknown request: ${String(type)}`)), cancel() {} };
+      }
     }
   }
 
