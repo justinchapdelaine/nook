@@ -27,17 +27,30 @@ flowchart TD
 
 The inference runtime runs WebLLM in a dedicated worker inside an offscreen document. The service worker stays a thin router for `chrome.*` APIs and opens the offscreen document on demand. In [Nook Bench](bench-results.md#hosting-e1) the offscreen document kept the model through idle time and through a service worker restart, while the service worker lost it every time, once in the middle of a reply.
 
-- Ports from `runtime.connect` reach every extension context with a listener, so a host dying does not always disconnect its clients. Clients need a heartbeat or timeout to notice a host that stopped.
-- Loading from cache takes about 1 to 2 s, so the offscreen document can close after an idle period to free GPU memory and reopen on demand.
+- **Ports.** Clients (the settings page, the translator in a page) talk to the host over a runtime port named `nook:host`. Ports from `runtime.connect` reach every extension context with an `onConnect` listener, and a port stays open while any of them holds it. So the offscreen document is the only context that listens for ports: when it closes, every client's port disconnects. The bench learned this the hard way, with the service worker holding ports to a closed host.
+- **Heartbeat.** A host can also hang without closing. The host sends `alive` every 5 s for each open request; a client fails a request after 60 s of silence.
+- **Opening.** The service worker opens the document when a client asks (`offscreen:ensure`) and replies once the document says it listens (`offscreen:ready`), since a port opened earlier never reaches it. Opening and closing run one after the other.
+- **Idle close.** A client disconnects once it has nothing pending. When the document has no client and no queued or running work for the idle time (a setting, 10 minutes by default, passed in the document's URL), it turns new ports away and asks the service worker to close it, which frees the GPU memory. A request turned away, or caught by the close before the host answered it, is sent once more to a fresh document. Loading from cache takes about 1 to 2 s.
+- **Model choice.** A model "family" (Qwen3.5-2B) is what settings store. The host loads the family's `q4f16` build when the GPU has `shader-f16` and its `q4f32` build otherwise, always with the context window from `models/models.json` (8K), so one load serves every task.
+- **Downloads.** Only the settings page asks the host to download, after the user presses Download. A translation request for a model that isn't cached fails with `not-downloaded`, and the translator opens the settings page at that step.
+- **Scheduler** (`extension/core/scheduler.ts`). One queue: work the user is waiting on (`user`) before `background` work, then first come, first served. When user work arrives while background generation runs, the running request is stopped, put back at the front of its queue and later starts again from the beginning; its client hears `restart` and drops what it had. Loads, downloads and deletes are never stopped part-way. A client that cancels, or whose port closes, takes its requests out of the queue or stops the running one.
+- **Engine contract** (`extension/core/runtime/engine.ts`). The host uses an engine through a small interface (GPU check, cache check, load, unload, remove, streaming generate with an abort signal). `webllm.ts` is the real one and the only file that imports WebLLM; it also removes the empty `<think></think>` block Qwen3.5 starts each reply with. The end-to-end tests build with a scripted fake in its place.
 
 ## Contexts and messages
 
-Phase 1 has two contexts. More arrive with the model in phase 2 (see [plan.md](plan.md#repo-organization) for the layout).
-
-- **Service worker** (`extension/entrypoints/background.ts`): registers the menus, listens for menu clicks, keyboard shortcuts and messages, runs the tab tools and reports each result on the toolbar badge. It keeps no state in memory that matters past one event; the undo record is in `chrome.storage.session`.
-- **Settings page** (`extension/entrypoints/options/`): tab access and the shortcuts for now.
-- Messages between contexts are typed in `extension/core/messages.ts`. The one message so far, `tabs:run`, asks the service worker to run a tab action in the sender's window and replies with what it did.
+- **Service worker** (`extension/entrypoints/background.ts`): registers the menus, listens for menu clicks, keyboard shortcuts and messages, runs the tab tools and reports each result on the toolbar badge, injects the translator, and opens and closes the offscreen document. It keeps no state in memory that matters past one event; the undo record is in `chrome.storage.session` and settings are in `chrome.storage.local`.
+- **Offscreen document** (`extension/entrypoints/offscreen/`) and its **engine worker** (`extension/core/runtime/worker.ts`): the model host. The document relays each client port to the worker, tagged with a port id.
+- **Translator** (`extension/entrypoints/translate.ts`): a script the service worker injects into the frame where the user picked *Translate selection*. It is not declared for all pages; the click or shortcut grants `activeTab`, which is what lets it in.
+- **Settings page** (`extension/entrypoints/options/`): translation language, sites where translation is off, the model, its download and deletion, the idle time, tab access and the shortcuts.
+- Messages between contexts are typed in `extension/core/messages.ts` (tab actions, translating a selection, opening the model setup) and `extension/core/runtime/protocol.ts` (the host protocol and the offscreen document's lifecycle).
 - Biome stops any file outside `extension/core/runtime/` from importing WebLLM, so the runtime stays swappable.
+
+## Translate selection
+
+- **Triggers.** *Translate selection* on the page context menu when text is selected, and Alt+Shift+L (Chromium keeps Alt+Shift+T for focusing the toolbar). On a site in the settings' list, nothing is injected and the badge shows `off`.
+- **Language.** `chrome.i18n.detectLanguage` on the selected text (up to 2,000 characters) first, since many sites mark every page `lang="en"`; the nearest `lang` attribute when detection isn't reliable; otherwise unknown, and the prompt names only the target. If the text is already in the target language, the bubble says so instead of translating.
+- **Task layer** (`extension/core/tasks/translate.ts`). Builds the prompt, sizes the token limit to the input (1.5 tokens per source character plus 64, at most 3,072), and takes at most 4,000 characters at once, which fits the 8K window even for Chinese or Japanese. A repetition guard watches the streamed reply: when its end is one piece repeated at least 4 times over at least 40 characters, it cancels the request and keeps the text up to the first copy. The bubble says when a reply was cut short.
+- **Bubble** (`extension/features/translate/bubble.ts`). A popover in a closed shadow root, so page styles can't change it and page scripts can't read the translation. Text goes in through `textContent` only. It sits under the selection (above it when there is no room), scrolls with the page, follows the light or dark scheme, and fades in (shorter with reduced motion). Escape, a click elsewhere or its close button closes it and cancels the reply.
 
 ## Tab tools
 
