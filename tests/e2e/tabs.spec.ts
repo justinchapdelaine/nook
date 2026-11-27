@@ -125,6 +125,35 @@ test("undo restores the tabs Nook closed, not a later tab the user closed at the
   );
 });
 
+test("undo brings back a group that closing its duplicate tabs emptied", async ({ context }) => {
+  const page = context.pages()[0] as Page;
+  await openTabs(context, ["http://a.example.com/x", "http://a.example.com/x#one", "http://a.example.com/x#two"]);
+  await page.evaluate(async () => {
+    const tabs = await chrome.tabs.query({ currentWindow: true });
+    const ids = tabs.slice(-2).map((t) => t.id) as [number, number];
+    const groupId = await chrome.tabs.group({ tabIds: ids });
+    await chrome.tabGroups.update(groupId, { title: "Mine", color: "red" });
+  });
+  const before = await windowTabs(page);
+
+  expect(await run(page, "close-duplicates")).toEqual({ action: "close-duplicates", count: 2 });
+  expect((await windowTabs(page)).some((t) => t.group === "Mine")).toBe(false);
+
+  // Push Nook's entries off the browser's recently closed list, so undo has to
+  // reopen by URL and make the group itself.
+  for (let i = 0; i < 25; i++) {
+    await openTabs(context, [`http://filler.test/${i}`]);
+    await page.evaluate(async () => {
+      const tabs = await chrome.tabs.query({ currentWindow: true });
+      const last = tabs[tabs.length - 1];
+      if (last?.id !== undefined) await chrome.tabs.remove(last.id);
+    });
+  }
+
+  expect(await run(page, "undo")).toEqual({ action: "undo", count: 2 });
+  expect(await windowTabs(page)).toEqual(before);
+});
+
 test("group by site groups by registrable domain, and undo puts every tab back", async ({ context }) => {
   const page = context.pages()[0] as Page;
   await openTabs(context, [

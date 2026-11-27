@@ -20,13 +20,13 @@ export interface ClosedTab {
   index: number;
   pinned: boolean;
   groupId: number;
+  /** The tab's group's look, so undo can make the group again if the close emptied it. */
+  group?: { title?: string; color: `${chrome.tabGroups.Color}` };
   /** The browser's recently closed entry for this tab, when it could be found right after the close. */
   sessionId?: string;
 }
 
-export type UndoRecord =
-  | { kind: "group"; at: number; tabs: MovedTab[] }
-  | { kind: "close"; at: number; tabs: ClosedTab[] };
+export type UndoRecord = { kind: "group"; tabs: MovedTab[] } | { kind: "close"; tabs: ClosedTab[] };
 
 export async function saveUndo(record: UndoRecord): Promise<void> {
   await chrome.storage.session.set({ [KEY]: record });
