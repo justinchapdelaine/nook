@@ -1,5 +1,5 @@
 import type { Page } from "@playwright/test";
-import { expect, test } from "./fixtures";
+import { expect, benchTest as test } from "./fixtures";
 
 async function openBench(page: Page, extensionId: string) {
   await page.goto(`chrome-extension://${extensionId}/bench.html`);

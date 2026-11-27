@@ -4,6 +4,14 @@
     "types": ["chrome", "@webgpu/types", "node"],
     "resolveJsonModule": true
   },
-  "include": ["bench/**/*", "bench/.wxt/wxt.d.ts", "scripts/**/*", "tests/**/*", "*.config.ts"],
-  "exclude": ["bench/.output", "bench/.wxt"]
+  "include": [
+    "extension/**/*",
+    "extension/.wxt/wxt.d.ts",
+    "bench/**/*",
+    "bench/.wxt/wxt.d.ts",
+    "scripts/**/*",
+    "tests/**/*",
+    "*.config.ts"
+  ],
+  "exclude": ["extension/.output", "extension/.wxt", "bench/.output", "bench/.wxt"]
 }

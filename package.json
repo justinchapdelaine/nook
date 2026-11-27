@@ -22,13 +22,17 @@
   },
   "scripts": {
     "fetch:libs": "node scripts/fetch-model-libs.ts",
-    "prepare": "wxt prepare bench",
-    "dev": "wxt bench",
-    "build": "npm run fetch:libs && wxt build bench",
-    "zip": "npm run fetch:libs && wxt zip bench",
+    "prepare": "wxt prepare extension && wxt prepare bench",
+    "dev": "wxt extension",
+    "build": "wxt build extension",
+    "zip": "wxt zip extension",
+    "build:e2e": "wxt build extension --mode e2e",
+    "bench:dev": "wxt bench",
+    "bench:build": "npm run fetch:libs && wxt build bench",
+    "bench:zip": "npm run fetch:libs && wxt zip bench",
     "check": "biome check . && tsc --noEmit",
     "format": "biome check --write .",
     "test": "vitest run",
-    "test:e2e": "npm run build && playwright test --trace off"
+    "test:e2e": "npm run build:e2e && npm run bench:build && playwright test --trace off"
   }
 }

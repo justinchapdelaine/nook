@@ -12,7 +12,17 @@ Nook targets [Helium](https://helium.computer/) first and aims to work in other 
 
 ## Status
 
-Discovery is done. The first code is [Nook Bench](bench/README.md), a test harness that measures on-device model hosting, speed and translation quality on real hardware before the extension itself is built. See [CLAUDE.md](CLAUDE.md) for the rules that apply to all work in this repo, [docs/architecture.md](docs/architecture.md) for the current design, and [docs/discovery-brief.md](docs/discovery-brief.md) for the starting context and open questions.
+Discovery and [Nook Bench](bench/README.md), the harness that measured on-device model hosting, speed and translation quality, are done. The extension is being built in the phases of [docs/plan.md](docs/plan.md). It now has its tab tools, which need no model: group tabs by site, close duplicate tabs, and undo the last change.
+
+```sh
+npm run build      # build Nook to extension/.output/chrome-mv3 (load it unpacked)
+npm run zip        # same, plus a zip for the store
+npm test           # unit tests
+npm run test:e2e   # build, then load Nook and the bench in headless Chromium
+npm run check      # Biome and TypeScript
+```
+
+See [CLAUDE.md](CLAUDE.md) for the rules that apply to all work in this repo, [docs/architecture.md](docs/architecture.md) for the current design, and [docs/discovery-brief.md](docs/discovery-brief.md) for the starting context and open questions.
 
 ## License
 
