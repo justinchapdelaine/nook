@@ -15,7 +15,7 @@ interface Fixtures {
 }
 
 interface WorkerFixtures {
-  /** Port of a local web server that answers every path with a small page titled after it. */
+  /** Port of a local web server that answers every path with the same small page. */
   sitePort: number;
 }
 
@@ -30,9 +30,10 @@ function extensionTest(outputDir: string) {
     sitePort: [
       // biome-ignore lint/correctness/noEmptyPattern: Playwright fixtures need the object pattern.
       async ({}, use) => {
-        const server = createServer((request, response) => {
+        // The page never echoes the request, so nothing a test sends can end up as markup.
+        const server = createServer((_request, response) => {
           response.setHeader("content-type", "text/html");
-          response.end(`<!doctype html><title>${request.headers.host}${request.url}</title><p>Test page`);
+          response.end("<!doctype html><title>Test page</title><p>Test page");
         });
         await new Promise<void>((resolve) => server.listen(0, "127.0.0.1", resolve));
         await use((server.address() as AddressInfo).port);
