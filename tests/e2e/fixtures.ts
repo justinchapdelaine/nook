@@ -23,6 +23,8 @@ interface WorkerFixtures {
 const PAGES: Record<string, string> = {
   "/french": `<!doctype html><html lang="en"><title>Article</title>
     <p id="text">Le chat dort sur le canapé depuis ce matin, et personne ne veut le réveiller.</p>`,
+  "/form": `<!doctype html><html lang="en"><title>Form</title>
+    <textarea id="field">Le chat dort sur le canapé depuis ce matin.</textarea>`,
   "/english": `<!doctype html><html lang="en"><title>Article</title>
     <p id="text">The cat has been asleep on the sofa since this morning, and nobody wants to wake it.</p>`,
 };

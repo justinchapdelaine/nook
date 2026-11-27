@@ -57,6 +57,26 @@ test("a selection's translation streams into a bubble under it", async ({ page, 
   await expect.poll(() => bubble(page)).toBeNull();
 });
 
+test("the shortcut translates text selected inside a text field", async ({ page, extensionId, serviceWorker }) => {
+  await download(page, extensionId);
+  // A two-word selection is too short to detect, and the page says English, so ask for French.
+  await settings(serviceWorker, { targetLanguage: "fr" });
+  await page.goto("http://example.com/form");
+  await page.evaluate(() => {
+    const field = document.querySelector("#field") as HTMLTextAreaElement;
+    field.focus();
+    field.setSelectionRange(0, 7);
+  });
+  // The shortcut passes no selection text; the translator must read the field's own selection.
+  await serviceWorker.evaluate(async (url) => {
+    const [tab] = await chrome.tabs.query({ url });
+    await (globalThis as unknown as { nookTranslateSelection(tab: unknown): Promise<void> }).nookTranslateSelection(
+      tab,
+    );
+  }, page.url());
+  await expect.poll(async () => (await bubble(page))?.text).toBe("LE CHAT");
+});
+
 test("text already in the target language isn't translated", async ({ page, extensionId, serviceWorker }) => {
   await download(page, extensionId);
   await translateOn(page, serviceWorker, "/english");

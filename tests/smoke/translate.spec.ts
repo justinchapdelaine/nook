@@ -33,6 +33,16 @@ test("the real model downloads, translates a selection and stops when cancelled"
   await settings(serviceWorker as Worker, { targetLanguage: "en", model: "Qwen3.5-0.8B" });
   await downloadLightModel(page, extensionId);
 
+  // On a software GPU (SwiftShader in the cloud) WebLLM loses the GPU device
+  // in its first reply, in the bench's host too (docs/plan.md, Testing), so
+  // there the test stops after the download and load.
+  const softwareGpu = await page.evaluate(async () => {
+    const adapter = await navigator.gpu?.requestAdapter();
+    const info = adapter?.info as (GPUAdapterInfo & { isFallbackAdapter?: boolean }) | undefined;
+    return !info || info.isFallbackAdapter === true || /swiftshader/i.test(`${info.vendor} ${info.architecture}`);
+  });
+  test.skip(softwareGpu, "Downloaded and loaded; replies need a hardware GPU");
+
   await translateOn(page, serviceWorker, "/french");
   await expect.poll(() => finished(page), { timeout: 10 * 60_000, intervals: [2_000] }).toMatch(/^Translated/);
   const { text } = (await bubble(page)) ?? { text: "" };
