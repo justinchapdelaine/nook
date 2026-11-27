@@ -37,4 +37,7 @@ dd {
 button {
   font: inherit;
   padding: 0.25rem 0.75rem;
+  /* At least the 24 by 24 pixel target WCAG asks for, however the text wraps. */
+  min-block-size: 24px;
+  min-inline-size: 24px;
 }
