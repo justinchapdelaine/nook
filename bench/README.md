@@ -45,11 +45,11 @@ Three things learned while building it, worth keeping for the real extension:
 ## Commands
 
 ```sh
-npm run build      # fetch model libraries, then build to bench/.output/chrome-mv3
-npm run zip        # same, plus bench/.output/nook-bench-<version>-chrome.zip
-npm test           # unit tests (chrF against sacreBLEU, markers, grouping checks)
-npm run test:e2e   # build, then load the extension in headless Chromium
-npm run check      # Biome and TypeScript
+npm run bench:build  # fetch model libraries, then build to bench/.output/chrome-mv3
+npm run bench:zip    # same, plus bench/.output/nook-bench-<version>-chrome.zip
+npm test             # unit tests (chrF against sacreBLEU, markers, grouping checks)
+npm run test:e2e     # build Nook and the bench, then load both in headless Chromium
+npm run check        # Biome and TypeScript
 ```
 
 The cloud test environment has no GPU (WebGPU there is SwiftShader, without `shader-f16`) and can't reach huggingface.co, so the automated tests cover the package check, the page, the E7 automatic checks and skipping of missing models, but no model ever loads there.
