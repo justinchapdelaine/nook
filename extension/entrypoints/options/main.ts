@@ -1,13 +1,16 @@
 // Settings page. Phase 1 holds the tab tools' access and shortcuts; the
 // model and translation settings arrive in phase 2.
+import type { TabAction } from "../../core/messages";
 import { isTabAction, TAB_ACTIONS } from "../../core/messages";
-import { TABS_PERMISSION as TABS } from "../../core/permissions";
+import { TABS_PERMISSION } from "../../core/permissions";
 
 const access = document.querySelector("#access") as HTMLParagraphElement;
 const accessButton = document.querySelector("#access-button") as HTMLButtonElement;
 
+let granted = false;
+
 async function showAccess(): Promise<void> {
-  const granted = await chrome.permissions.contains(TABS);
+  granted = await chrome.permissions.contains(TABS_PERMISSION);
   access.textContent = granted
     ? "Nook can read your tabs' addresses and titles. It needs this to find duplicates and group by site, and nothing leaves this device."
     : "Nook asks to read your tabs' addresses and titles the first time you use a tab tool.";
@@ -18,16 +21,15 @@ async function showAccess(): Promise<void> {
 accessButton.addEventListener("click", async () => {
   // The request must be the first call in the click handler, or the click no
   // longer counts as a user gesture.
-  const allow = accessButton.textContent?.startsWith("Allow") ?? false;
-  await (allow ? chrome.permissions.request(TABS) : chrome.permissions.remove(TABS));
+  await (granted ? chrome.permissions.remove(TABS_PERMISSION) : chrome.permissions.request(TABS_PERMISSION));
   await showAccess();
 });
 
 async function showShortcuts(): Promise<void> {
   const list = document.querySelector("#shortcuts") as HTMLDListElement;
   // The browser lists commands alphabetically; show them in menu order.
-  const commands = (await chrome.commands.getAll()).flatMap((c) =>
-    isTabAction(c.name) ? [{ ...c, name: c.name }] : [],
+  const commands = (await chrome.commands.getAll()).filter((c): c is chrome.commands.Command & { name: TabAction } =>
+    isTabAction(c.name),
   );
   commands.sort((a, b) => TAB_ACTIONS.indexOf(a.name) - TAB_ACTIONS.indexOf(b.name));
   for (const command of commands) {

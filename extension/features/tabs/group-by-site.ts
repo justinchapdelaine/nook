@@ -2,10 +2,23 @@
 // in Node tests; the caller passes in the registrable-domain lookup.
 import { isWebUrl } from "./urls";
 
-export const GROUP_COLORS = ["grey", "blue", "red", "yellow", "green", "pink", "purple", "cyan", "orange"] as const;
-export type GroupColor = (typeof GROUP_COLORS)[number];
+export type GroupColor = `${chrome.tabGroups.Color}`;
+export const GROUP_COLORS: readonly GroupColor[] = [
+  "grey",
+  "blue",
+  "red",
+  "yellow",
+  "green",
+  "pink",
+  "purple",
+  "cyan",
+  "orange",
+];
 
-/** The parts of a tab the grouping reads. `groupId` is -1 for a tab in no group. */
+/** The `groupId` of a tab in no group (chrome.tabGroups.TAB_GROUP_ID_NONE, kept here so this file needs no browser). */
+export const NO_GROUP = -1;
+
+/** The parts of a tab the grouping reads. `groupId` is NO_GROUP for a tab in no group. */
 export interface GroupCandidate {
   id: number;
   url?: string;
@@ -19,7 +32,7 @@ export interface ExistingGroup {
   title?: string;
 }
 
-/** One group to create (no `groupId`) or to add tabs to. */
+/** One group to create (no `groupId`) or to add tabs to. `color` is only used for a new group. */
 export interface SiteGroup {
   title: string;
   color: GroupColor;
@@ -48,7 +61,7 @@ export function planSiteGroups(
 ): SiteGroup[] {
   const bySite = new Map<string, number[]>();
   for (const tab of tabs) {
-    if (tab.pinned || tab.groupId !== -1 || !isWebUrl(tab.url)) continue;
+    if (tab.pinned || tab.groupId !== NO_GROUP || !isWebUrl(tab.url)) continue;
     const url = new URL(tab.url);
     const site = url.protocol === "file:" ? "Files" : siteOf(url.hostname);
     const list = bySite.get(site);

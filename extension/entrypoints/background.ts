@@ -17,7 +17,7 @@ const SETTINGS_MENU = "settings";
 const RUN: Record<TabAction, (windowId: number) => Promise<number>> = {
   "group-tabs": groupBySite,
   "close-duplicates": closeDuplicates,
-  undo: () => undoLast(),
+  undo: undoLast,
 };
 
 // Tab actions run one at a time, so a double press can't interleave two
