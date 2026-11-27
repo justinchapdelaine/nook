@@ -1,10 +1,18 @@
-// Service worker: wires the toolbar and tab menus, keyboard shortcuts and
-// messages to the tab tools, and reports each result on the toolbar badge.
+// Service worker: wires the menus, keyboard shortcuts and messages to the
+// tab tools and the translator, reports results on the toolbar badge, and
+// opens and closes the offscreen document that hosts the model.
 import { defineBackground } from "wxt/utils/define-background";
+
+/** True only in the test builds (see wxt.config.ts). */
+declare const __NOOK_TEST_BUILD__: boolean;
+
 import { clearBadge, flashBadge } from "../core/badge";
-import type { NookMessage, TabAction, TabActionResult } from "../core/messages";
+import type { NookMessage, TabAction, TabActionResult, TranslateSelectionMessage } from "../core/messages";
 import { isTabAction } from "../core/messages";
+import { closeOffscreen, ensureOffscreen } from "../core/offscreen";
 import { TABS_PERMISSION } from "../core/permissions";
+import type { EnsureResult, OffscreenMessage } from "../core/runtime/protocol";
+import { getSettings, isExcluded } from "../core/settings";
 import { closeDuplicates, groupBySite, undoLast } from "../features/tabs/actions";
 
 const TAB_MENUS: { id: TabAction; title: string }[] = [
@@ -13,6 +21,7 @@ const TAB_MENUS: { id: TabAction; title: string }[] = [
   { id: "undo", title: "Undo last change" },
 ];
 const SETTINGS_MENU = "settings";
+const TRANSLATE_SELECTION = "translate-selection";
 
 const RUN: Record<TabAction, (windowId: number) => Promise<number>> = {
   "group-tabs": groupBySite,
@@ -87,6 +96,37 @@ function report({ action, count, error }: TabActionResult): Promise<void> {
   return flashBadge(String(count), "done", done[action]);
 }
 
+/**
+ * Injects the translator into the frame and asks it to translate the
+ * selection. The menu click or shortcut that leads here grants activeTab,
+ * which is what lets Nook into the page; nothing is injected otherwise.
+ */
+async function translateSelection(tab: chrome.tabs.Tab | undefined, frameId = 0, selectionText?: string) {
+  if (tab?.id === undefined) return;
+  try {
+    const { excludedSites } = await getSettings();
+    const hostname = tab.url ? URL.parse(tab.url)?.hostname : undefined;
+    if (hostname && isExcluded(hostname, excludedSites)) {
+      await flashBadge("off", "info", `translation is off on ${hostname}`);
+      return;
+    }
+    await chrome.scripting.executeScript({ target: { tabId: tab.id, frameIds: [frameId] }, files: ["/translate.js"] });
+    await chrome.tabs.sendMessage(
+      tab.id,
+      { type: "translate:selection", selectionText } satisfies TranslateSelectionMessage,
+      {
+        frameId,
+      },
+    );
+  } catch (error) {
+    // Browser pages, the web store and some frames can't be scripted.
+    console.warn("Nook: can't translate in this page", error);
+    await flashBadge("!", "error", "can't translate on this page").catch(() => {});
+  }
+}
+
+const openSetup = () => chrome.tabs.create({ url: chrome.runtime.getURL("/options.html#model") });
+
 export default defineBackground({
   type: "module",
   main() {
@@ -96,10 +136,12 @@ export default defineBackground({
       await chrome.contextMenus.removeAll();
       for (const { id, title } of TAB_MENUS) chrome.contextMenus.create({ id, title, contexts: ["action", "tab"] });
       chrome.contextMenus.create({ id: SETTINGS_MENU, title: "Settings", contexts: ["action"] });
+      chrome.contextMenus.create({ id: TRANSLATE_SELECTION, title: "Translate selection", contexts: ["selection"] });
     });
 
     chrome.contextMenus.onClicked.addListener((info, tab) => {
       if (isTabAction(info.menuItemId)) void runTabAction(info.menuItemId, tab?.windowId);
+      else if (info.menuItemId === TRANSLATE_SELECTION) void translateSelection(tab, info.frameId, info.selectionText);
       else if (info.menuItemId === SETTINGS_MENU) {
         chrome.runtime
           .openOptionsPage()
@@ -109,13 +151,35 @@ export default defineBackground({
 
     chrome.commands.onCommand.addListener((command, tab) => {
       if (isTabAction(command)) void runTabAction(command, tab?.windowId);
+      else if (command === TRANSLATE_SELECTION) void translateSelection(tab);
     });
 
-    chrome.runtime.onMessage.addListener((message: NookMessage, sender, sendResponse) => {
+    chrome.runtime.onMessage.addListener((message: NookMessage | OffscreenMessage, sender, sendResponse) => {
+      if (message?.type === "offscreen:ensure") {
+        ensureOffscreen().then(
+          () => sendResponse({ ok: true } satisfies EnsureResult),
+          (error: unknown) => sendResponse({ ok: false, error: String(error) } satisfies EnsureResult),
+        );
+        return true;
+      }
+      if (message?.type === "offscreen:idle") {
+        closeOffscreen().catch((error: unknown) => console.error("Nook: closing the model host failed", error));
+        return false;
+      }
+      if (message?.type === "setup:open") {
+        openSetup().catch((error: unknown) => console.error("Nook: opening settings failed", error));
+        return false;
+      }
       if (message?.type !== "tabs:run" || !isTabAction(message.action)) return false;
       // runTabAction makes its permission request before this awaits anything.
       void (async () => sendResponse(await runTabAction(message.action, sender.tab?.windowId)))();
       return true;
     });
+
+    // The end-to-end tests can't click a page menu or press a browser
+    // shortcut, so their builds expose the menu's action. Store builds don't.
+    if (__NOOK_TEST_BUILD__) {
+      Object.assign(globalThis, { nookTranslateSelection: translateSelection });
+    }
   },
 });

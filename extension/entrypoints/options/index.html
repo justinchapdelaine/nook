@@ -13,16 +13,74 @@
       <h1>Nook</h1>
       <p class="lead">Everything Nook does runs on this device.</p>
 
-      <section>
-        <h2>Tab tools</h2>
+      <section aria-labelledby="translation-heading">
+        <h2 id="translation-heading">Translation</h2>
+        <p>
+          Select text on a page, then pick <strong>Translate selection</strong> from the right-click menu or press the
+          shortcut below. The translation appears under the text.
+        </p>
+        <label class="field">
+          Translate into
+          <select id="target-language"></select>
+        </label>
+        <p class="note">
+          Quality varies by language. It was measured for French, German, Spanish, Vietnamese, Ukrainian, Polish,
+          Japanese, Chinese and Tagalog; translations into Japanese, Chinese and Tagalog are noticeably weaker. The
+          other languages haven't been measured yet.
+        </p>
+
+        <h3>Sites where translation is off</h3>
+        <form id="sites-form">
+          <label class="field">
+            One site per line, such as example.com (which covers its subdomains)
+            <textarea id="excluded-sites" rows="3" spellcheck="false"></textarea>
+          </label>
+          <button type="submit">Save sites</button>
+          <span id="sites-saved" role="status"></span>
+        </form>
+      </section>
+
+      <section id="model" aria-labelledby="model-heading">
+        <h2 id="model-heading">Translation model</h2>
+        <p>
+          Nook translates with a language model that runs on this device's graphics processor. The model is downloaded
+          once, from Hugging Face. <strong>That download is the only time Nook uses the network</strong>; the text you
+          translate never leaves this device.
+        </p>
+        <fieldset id="models">
+          <legend>Model</legend>
+        </fieldset>
+        <p id="model-status" role="status"></p>
+        <progress id="download-progress" max="1" value="0" hidden></progress>
+        <div class="actions">
+          <button type="button" id="download" hidden></button>
+          <button type="button" id="delete" hidden></button>
+        </div>
+
+        <label class="field">
+          Free the graphics memory after
+          <select id="idle-minutes">
+            <option value="5">5 minutes unused</option>
+            <option value="10">10 minutes unused</option>
+            <option value="30">30 minutes unused</option>
+            <option value="60">1 hour unused</option>
+          </select>
+        </label>
+        <p class="note">The model loads again in a second or two the next time you translate.</p>
+      </section>
+
+      <section aria-labelledby="tabs-heading">
+        <h2 id="tabs-heading">Tab tools</h2>
         <p>
           Group tabs by site, close duplicate tabs and undo the last change, from the toolbar icon's right-click menu,
           a tab's right-click menu, or the shortcuts below.
         </p>
         <p id="access" aria-live="polite"></p>
         <button type="button" id="access-button" hidden></button>
+      </section>
 
-        <h3>Shortcuts</h3>
+      <section aria-labelledby="shortcuts-heading">
+        <h2 id="shortcuts-heading">Shortcuts</h2>
         <dl id="shortcuts"></dl>
         <button type="button" id="change-shortcuts">Change shortcuts</button>
       </section>
