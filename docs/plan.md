@@ -57,7 +57,7 @@ Each phase ends with a PR and is done when the listed things are true. The order
 - The `extension/` root builds, passes `check`, and loads in headless Chromium in a Playwright test.
 - Message contracts, the offscreen host, the engine worker, the scheduler and the runtime exist, with the bench's lessons built in: wait for the offscreen ready message, never disconnect a port meant for another context, a heartbeat every 5 s per open request with a 60 s timeout, and checking `runtime.getContexts` before reusing a port.
 - The offscreen document closes after 10 minutes idle (a setting) and reopens on demand.
-- **Close duplicates** works with no model: URLs normalized (fragment, tracking parameters such as `utm_*`, `fbclid`, `gclid`, trailing slash), keeping the active tab, else the oldest. Canonical URLs are left for later, since reading them needs page access.
+- **Close duplicates** works with no model: URLs normalized (fragment, tracking parameters such as `utm_*`, `fbclid`, `gclid`, and a trailing slash only on the bare origin, since `/guide` and `/guide/` can be different pages), keeping the active tab, else the oldest. Canonical URLs are left for later, since reading them needs page access.
 - **Group by site** works with no model, using `publicSuffix` to group tabs by registrable domain.
 - **Undo last change** restores both: group moves are reversed from a saved snapshot; closed tabs come back through `sessions`, falling back to reopening by URL past its 25-entry limit. The undo record lives in `chrome.storage.session` so it survives a service worker restart.
 - Entry points: toolbar icon menu (*Group tabs*, *Close duplicates*, *Undo last change*, *Settings*), the same tab actions on the tab right-click menu, and keyboard shortcuts. Each action gives brief feedback through the toolbar badge.
@@ -84,7 +84,7 @@ Each phase ends with a PR and is done when the listed things are true. The order
 - Visible blocks are queued first and the rest follow by distance from the viewport, through the scheduler's priorities. Short blocks go in batches of 4, as a JSON array of fixed length (E6). Long blocks are split into sentences.
 - Progress: blocks being translated pulse gently, then cross-fade; reduced motion gets a static dim. A small corner indicator shows progress and offers cancel.
 - **Show original** swaps the original text back into the original nodes, instantly. A `MutationObserver` picks up blocks a page adds or re-renders.
-- In this phase every block is translated as plain text: a block with inline formatting keeps its nodes, its translation goes into the first text node and the others are emptied. Restore still works, because the nodes are kept.
+- In this phase every block is translated as plain text: a block with inline formatting keeps its nodes, but their text is emptied and the translation goes into one new text node placed directly in the block, outside any bold, italic or link wrapper, so the whole block doesn't turn bold or clickable. Links in such blocks stop working until phase 5. Show original removes the added node and puts the original text back.
 - Done when articles, docs and one dynamic site translate and restore cleanly.
 
 ### 5. Inline formatting
@@ -131,7 +131,7 @@ English into Japanese and Chinese scores about 31 chrF, partly because chrF coun
 
 0.8B is weaker in every pair (mean chrF 32.6 against 40.9 out of English) and no faster per screen, because it writes longer output. Its only case is a machine with too little GPU memory for 2B, and the rough readings did not show a clear memory saving. Options: don't ship it; ship it only for tab grouping; or ship it as a light option with a quality warning.
 
-**Needed by:** phase 2, when the options page gets its model choice. Default until decided: not shipped, which also saves about 14 MB of packaged libraries.
+**Needed by:** phase 2, when the options page gets its model choice. Until decided, 0.8B stays in the model list as the light option, as CLAUDE.md records. If the decision drops it, the same PR updates CLAUDE.md, and the package gets about 14 MB smaller.
 
 ## Testing
 
