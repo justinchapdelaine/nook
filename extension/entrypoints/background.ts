@@ -101,12 +101,20 @@ function report({ action, count, error }: TabActionResult): Promise<void> {
  * selection. The menu click or shortcut that leads here grants activeTab,
  * which is what lets Nook into the page; nothing is injected otherwise.
  */
-async function translateSelection(tab: chrome.tabs.Tab | undefined, frameId = 0, selectionText?: string) {
+async function translateSelection(
+  tab: chrome.tabs.Tab | undefined,
+  frameId = 0,
+  selectionText?: string,
+  frameUrl?: string,
+) {
   if (tab?.id === undefined) return;
   try {
     const { excludedSites } = await getSettings();
-    const hostname = tab.url ? URL.parse(tab.url)?.hostname : undefined;
-    if (hostname && isExcluded(hostname, excludedSites)) {
+    // Both the page and the frame holding the selection count, so an excluded site stays
+    // off when it is embedded in another page.
+    const hostnames = [tab.url, frameUrl].map((url) => (url ? URL.parse(url)?.hostname : undefined));
+    const hostname = hostnames.find((name) => name && isExcluded(name, excludedSites));
+    if (hostname) {
       await flashBadge("off", "info", `translation is off on ${hostname}`);
       return;
     }
@@ -141,7 +149,8 @@ export default defineBackground({
 
     chrome.contextMenus.onClicked.addListener((info, tab) => {
       if (isTabAction(info.menuItemId)) void runTabAction(info.menuItemId, tab?.windowId);
-      else if (info.menuItemId === TRANSLATE_SELECTION) void translateSelection(tab, info.frameId, info.selectionText);
+      else if (info.menuItemId === TRANSLATE_SELECTION)
+        void translateSelection(tab, info.frameId, info.selectionText, info.frameUrl);
       else if (info.menuItemId === SETTINGS_MENU) {
         chrome.runtime
           .openOptionsPage()

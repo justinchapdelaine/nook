@@ -142,16 +142,19 @@ export function openBubble(anchor: DOMRect, onClose: () => void): BubbleView {
   closeButton.addEventListener("click", close);
 
   bubble.showPopover();
+  // Top-layer elements with position: absolute are placed against the
+  // document, so the bubble scrolls with the text it belongs to. Fix the
+  // anchor in document coordinates now, so placing it again after the page
+  // scrolled still puts it next to the text.
+  const opened = { scrollX, scrollY, innerWidth, innerHeight };
   const place = () => {
-    // Top-layer elements with position: absolute are placed against the
-    // document, so the bubble scrolls with the text it belongs to.
     const { width, height } = bubble.getBoundingClientRect();
     const below = anchor.bottom + GAP;
-    const fitsBelow = below + height <= innerHeight - GAP || anchor.top - GAP - height < GAP;
+    const fitsBelow = below + height <= opened.innerHeight - GAP || anchor.top - GAP - height < GAP;
     const top = fitsBelow ? below : anchor.top - GAP - height;
-    const left = Math.max(GAP, Math.min(anchor.left, innerWidth - width - GAP));
-    bubble.style.top = `${top + scrollY}px`;
-    bubble.style.left = `${left + scrollX}px`;
+    const left = Math.max(GAP, Math.min(anchor.left, opened.innerWidth - width - GAP));
+    bubble.style.top = `${top + opened.scrollY}px`;
+    bubble.style.left = `${left + opened.scrollX}px`;
   };
   place();
   // Growing text can push the bubble past the bottom of the viewport; place it again as it grows.

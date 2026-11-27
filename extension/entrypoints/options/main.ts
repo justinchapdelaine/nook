@@ -38,8 +38,8 @@ async function showTranslation(): Promise<void> {
       .split("\n")
       .map((line) => line.trim().toLowerCase())
       .filter(Boolean)
-      // Accept a pasted address as well as a bare site.
-      .map((line) => URL.parse(line)?.hostname || line);
+      // Accept a pasted address, with or without its scheme, as well as a bare site.
+      .map((line) => URL.parse(line.includes("://") ? line : `https://${line}`)?.hostname || line);
     await updateSettings({ excludedSites });
     sites.value = excludedSites.join("\n");
     $("#sites-saved").textContent = "Saved.";
