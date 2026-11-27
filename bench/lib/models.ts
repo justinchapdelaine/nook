@@ -1,10 +1,12 @@
-// The model list lives in bench/models.json; this turns it into WebLLM's
-// AppConfig. Model libraries are served from the extension package.
+// The bench loads the models Nook ships (models/models.json) plus its own
+// extras (bench/models.json), and turns them into WebLLM's AppConfig. Model
+// libraries are served from the extension package.
 import type { AppConfig, ChatOptions } from "@mlc-ai/web-llm";
-import config from "../models.json";
+import shared from "../../models/models.json";
+import extra from "../models.json";
 
-export type BenchModel = (typeof config.models)[number];
-export const MODELS: BenchModel[] = config.models;
+export type BenchModel = (typeof shared.models)[number] | (typeof extra.models)[number];
+export const MODELS: BenchModel[] = [...shared.models, ...extra.models];
 
 export function findModel(id: string): BenchModel {
   const model = MODELS.find((m) => m.id === id);

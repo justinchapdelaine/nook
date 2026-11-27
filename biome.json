@@ -6,7 +6,7 @@
     "useIgnoreFile": true
   },
   "files": {
-    "includes": ["**", "!bench/public/model-libs", "!**/*.md"]
+    "includes": ["**", "!bench/public/model-libs", "!extension/public/model-libs", "!**/*.md"]
   },
   "formatter": {
     "indentStyle": "space",
