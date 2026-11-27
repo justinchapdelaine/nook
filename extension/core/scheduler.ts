@@ -32,6 +32,8 @@ interface Entry {
   job: Job<unknown>;
   seq: number;
   attempt: number;
+  /** Set by cancel(), so a job stopped for preemption and then cancelled isn't run again. */
+  cancelled?: boolean;
   controller?: AbortController;
   resolve(value: unknown): void;
   reject(error: unknown): void;
@@ -75,6 +77,7 @@ export class Scheduler {
 
   private cancel(entry: Entry): void {
     if (this.running === entry) {
+      entry.cancelled = true;
       entry.controller?.abort(CANCELLED);
       return;
     }
@@ -96,11 +99,11 @@ export class Scheduler {
     const settle = (outcome: () => void) => {
       this.running = undefined;
       const reason: unknown = controller.signal.reason;
-      if (controller.signal.aborted && reason === PREEMPTED) {
+      if (entry.cancelled || (controller.signal.aborted && reason === CANCELLED)) {
+        entry.reject(new CancelledError());
+      } else if (controller.signal.aborted && reason === PREEMPTED) {
         entry.attempt++;
         this.insert(entry);
-      } else if (controller.signal.aborted && reason === CANCELLED) {
-        entry.reject(new CancelledError());
       } else {
         outcome();
       }

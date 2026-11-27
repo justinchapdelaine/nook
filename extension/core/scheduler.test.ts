@@ -73,6 +73,23 @@ describe("Scheduler", () => {
     expect(await rbg).toBe("bg");
   });
 
+  it("doesn't rerun a preempted job that is cancelled before it stops", async () => {
+    const log: string[] = [];
+    const scheduler = new Scheduler();
+    const a = controllableJob("a", "background", log);
+    const u = controllableJob("u", "user", log);
+    const ticket = scheduler.add(a.job);
+    await tick();
+    const ru = scheduler.add(u.job).result;
+    ticket.cancel();
+    await expect(ticket.result).rejects.toBeInstanceOf(CancelledError);
+    await tick();
+    u.finish();
+    expect(await ru).toBe("u");
+    await tick();
+    expect(log).toEqual(["a#0", "u#0"]);
+  });
+
   it("never stops user work or work that can't be preempted", async () => {
     const log: string[] = [];
     const scheduler = new Scheduler();
