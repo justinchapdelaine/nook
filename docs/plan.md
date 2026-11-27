@@ -55,20 +55,25 @@ Each phase ends with a PR and is done when the listed things are true. The order
 ### 1. Foundation and model-free tab tools
 
 - The `extension/` root builds, passes `check`, and loads in headless Chromium in a Playwright test.
-- Message contracts, the offscreen host, the engine worker, the scheduler and the runtime exist, with the bench's lessons built in: wait for the offscreen ready message, never disconnect a port meant for another context, a heartbeat every 5 s per open request with a 60 s timeout, and checking `runtime.getContexts` before reusing a port.
-- The offscreen document closes after 10 minutes idle (a setting) and reopens on demand.
+- The message contracts the tab tools need exist. Nothing model-related is built yet; that waits for phase 2, the first phase that uses it.
 - **Close duplicates** works with no model: URLs normalized (fragment, tracking parameters such as `utm_*`, `fbclid`, `gclid`, and a trailing slash only on the bare origin, since `/guide` and `/guide/` can be different pages), keeping the active tab, else the oldest. Canonical URLs are left for later, since reading them needs page access.
 - **Group by site** works with no model, using `publicSuffix` to group tabs by registrable domain.
 - **Undo last change** restores both: group moves are reversed from a saved snapshot; closed tabs come back through `sessions`, falling back to reopening by URL past its 25-entry limit. The undo record lives in `chrome.storage.session` so it survives a service worker restart.
 - Entry points: toolbar icon menu (*Group tabs*, *Close duplicates*, *Undo last change*, *Settings*), the same tab actions on the tab right-click menu, and keyboard shortcuts. Each action gives brief feedback through the toolbar badge.
+- `CHROMEWEBSTORE.md` starts here, with a justification for each permission this phase adds.
 - `tabs` is an optional permission, requested on the first tab action. The request is the first call in the click handler, with nothing awaited before it, or Chrome drops the user gesture.
 
 ### 2. Model setup and selection translation
 
+- The offscreen host, engine worker, runtime and scheduler exist, with the bench's lessons built in: wait for the offscreen ready message, never disconnect a port meant for another context, a heartbeat every 5 s per open request with a 60 s timeout, and checking `runtime.getContexts` before reusing a port.
+- The model loads once with one context window for every task, 8K to start (a config value). Changing the window means reloading the model, so it is not set per task; E4 showed 8K costs about 0.1 GB more than 4K.
+- The runtime picks the `q4f16` build when the GPU has `shader-f16` and the `q4f32` build otherwise.
+- The offscreen document closes after 10 minutes idle (a setting) and reopens on demand.
+- **Scheduler.** WebLLM runs one request at a time, and a running request can't be reordered. The scheduler orders the waiting queue by priority; when work the user is waiting on arrives (a selection), it cancels a running background request (a page batch) and puts that back in the queue.
 - **First download**: a consent step on the options page with the download size, a progress display and the note that this is the only network use. Translation menu items open it when no model is downloaded yet.
 - The options page also holds target language (default: browser UI language), model choice, site exclusions and cache management.
 - **Translate selection** from the page context menu and a shortcut. The result streams into a small bubble in a closed shadow root, isolated from page styles. The text goes in as text nodes only.
-- **Language detection**: the page's `lang` attribute, then `chrome.i18n.detectLanguage` on a text sample, with the result treated as unknown when not reliable. Menu labels name the detected language, and the page entry hides when the page is already in the target language.
+- **Language detection**: `chrome.i18n.detectLanguage` on a sample of the text first, since many sites mark every page `lang="en"` whatever it says. The page's `lang` attribute is the fallback when detection isn't reliable, and otherwise the language is unknown. Menu labels name the detected language, and the page entry hides when the page is already in the target language.
 - A repetition guard stops a reply that repeats itself, and the token limit is sized to the input. Both answer the E3 loops.
 - Quality checked by hand on real pages in the languages the owner reads.
 
@@ -76,7 +81,7 @@ Each phase ends with a PR and is done when the listed things are true. The order
 
 - Rules run first; one LLM request places the remaining tabs and names every group, using WebLLM's JSON schema output. Tabs are referred to by short indexes.
 - The result is validated (every tab once, known indexes, non-empty names); on failure it retries once, then falls back to the rule groups.
-- Done when a 20 to 50 tab window groups reliably, with undo. The context window is sized for 50 tabs; E4 showed a bigger window costs little memory.
+- Done when a 20 to 50 tab window groups reliably, with undo, within the shared context window. If 50 tabs don't fit in 8K, the config value goes up for every task.
 
 ### 4. Full-page translation, plain text
 
@@ -94,8 +99,8 @@ Each phase ends with a PR and is done when the listed things are true. The order
 
 ### 6. Polish and store readiness
 
-- Smooth model download, settings and errors (no WebGPU, no `shader-f16` so `q4f32` is used, too little memory).
-- `CHROMEWEBSTORE.md` with a justification for every permission, the privacy statement and the listing text, and a pass of the store review checklist.
+- Smooth model download, settings and errors (no WebGPU, too little GPU memory).
+- `CHROMEWEBSTORE.md` completed with the privacy statement and listing text, and a pass of the store review checklist.
 - Per-site auto-translate (with optional host permissions per site) and near-duplicates fit here or later.
 
 ## Permissions
@@ -103,11 +108,12 @@ Each phase ends with a PR and is done when the listed things are true. The order
 | Permission | Needed for | Phase |
 | --- | --- | --- |
 | `contextMenus`, `activeTab`, `scripting` | Menus, and running the translator in the current tab after a user gesture | 1, 2 |
-| `offscreen`, `storage`, `unlimitedStorage` | The engine's home, settings and undo, and keeping weights from eviction | 1 |
+| `storage` | Settings and the undo record | 1 |
+| `offscreen`, `unlimitedStorage` | The engine's home, and keeping weights from eviction | 2 |
 | `tabGroups`, `sessions`, `publicSuffix` | Grouping, restoring closed tabs, grouping by site | 1 |
 | `tabs` (optional) | Reading tab URLs and titles for duplicates and grouping | 1 |
 
-No host permissions at install. The manifest keeps `'wasm-unsafe-eval'` in the extension page CSP.
+No host permissions at install. The manifest keeps `'wasm-unsafe-eval'` in the extension page CSP. `CHROMEWEBSTORE.md` starts in phase 1, and each PR that adds a permission adds its plain-language justification there, so the store listing never has to catch up.
 
 ## Open decisions
 
