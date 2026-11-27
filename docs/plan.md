@@ -65,6 +65,7 @@ Each phase ends with a PR and is done when the listed things are true. The order
 
 ### 2. Model setup and selection translation
 
+- The model list moves to `models/models.json` and the bench reads it from there.
 - The offscreen host, engine worker, runtime and scheduler exist, with the bench's lessons built in: wait for the offscreen ready message, never disconnect a port meant for another context, a heartbeat every 5 s per open request with a 60 s timeout, and checking `runtime.getContexts` before reusing a port.
 - The model loads once with one context window for every task, 8K to start (a config value). Changing the window means reloading the model, so it is not set per task; E4 showed 8K costs about 0.1 GB more than 4K.
 - The runtime picks the `q4f16` build when the GPU has `shader-f16` and the `q4f32` build otherwise.
@@ -73,19 +74,20 @@ Each phase ends with a PR and is done when the listed things are true. The order
 - **First download**: a consent step on the options page with the download size, a progress display and the note that this is the only network use. Translation menu items open it when no model is downloaded yet.
 - The options page also holds target language (default: browser UI language), model choice, site exclusions and cache management.
 - **Translate selection** from the page context menu and a shortcut. The result streams into a small bubble in a closed shadow root, isolated from page styles. The text goes in as text nodes only.
-- **Language detection**: `chrome.i18n.detectLanguage` on a sample of the text first, since many sites mark every page `lang="en"` whatever it says. The page's `lang` attribute is the fallback when detection isn't reliable, and otherwise the language is unknown. Menu labels name the detected language, and the page entry hides when the page is already in the target language.
+- **Language detection**: `chrome.i18n.detectLanguage` on a sample of the text first, since many sites mark every page `lang="en"` whatever it says. The page's `lang` attribute is the fallback when detection isn't reliable, and otherwise the language is unknown. Detection runs when the user picks a menu item or shortcut, because that gesture is what grants access to the page. Menu labels therefore stay fixed (*Translate selection*, *Translate page*); if the page is already in the target language, Nook says so in the corner indicator instead of translating.
 - A repetition guard stops a reply that repeats itself, and the token limit is sized to the input. Both answer the E3 loops.
 - Quality checked by hand on real pages in the languages the owner reads.
 
 ### 3. AI tab grouping
 
+- With no model downloaded, *Group tabs* keeps the phase 1 rule-only behaviour, so AI stays optional.
 - Rules run first; one LLM request places the remaining tabs and names every group, using WebLLM's JSON schema output. Tabs are referred to by short indexes.
 - The result is validated (every tab once, known indexes, non-empty names); on failure it retries once, then falls back to the rule groups.
 - Done when a 20 to 50 tab window groups reliably, with undo, within the shared context window. If 50 tabs don't fit in 8K, the config value goes up for every task.
 
 ### 4. Full-page translation, plain text
 
-- Blocks (paragraphs, headings, list items, cells) are collected, skipping code, form fields, editable areas and blocks already in the target language.
+- Blocks (paragraphs, headings, list items, cells) are collected, skipping code, form fields and editable areas. A block is skipped as already translated only when detection on it is reliable, since short text often isn't.
 - Visible blocks are queued first and the rest follow by distance from the viewport, through the scheduler's priorities. Short blocks go in batches of 4, as a JSON array of fixed length (E6). Long blocks are split into sentences.
 - Progress: blocks being translated pulse gently, then cross-fade; reduced motion gets a static dim. A small corner indicator shows progress and offers cancel.
 - **Show original** swaps the original text back into the original nodes, instantly. A `MutationObserver` picks up blocks a page adds or re-renders.
@@ -107,7 +109,8 @@ Each phase ends with a PR and is done when the listed things are true. The order
 
 | Permission | Needed for | Phase |
 | --- | --- | --- |
-| `contextMenus`, `activeTab`, `scripting` | Menus, and running the translator in the current tab after a user gesture | 1, 2 |
+| `contextMenus` | Toolbar, tab and page menus | 1 |
+| `activeTab`, `scripting` | Running the translator in the current tab after a user gesture | 2 |
 | `storage` | Settings and the undo record | 1 |
 | `offscreen`, `unlimitedStorage` | The engine's home, and keeping weights from eviction | 2 |
 | `tabGroups`, `sessions`, `publicSuffix` | Grouping, restoring closed tabs, grouping by site | 1 |
