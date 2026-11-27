@@ -61,7 +61,7 @@ export default defineConfig({
       ],
       // Asked for on the first tab action, not at install.
       optional_permissions: testBuild ? [] : ["tabs"],
-      host_permissions: testBuild ? ["<all_urls>"] : [],
+      ...(testBuild ? { host_permissions: ["<all_urls>"] } : {}),
       action: { default_title: "Nook: right-click for tab tools" },
       commands: {
         ...TAB_COMMANDS,
