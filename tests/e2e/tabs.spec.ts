@@ -96,6 +96,35 @@ test("close duplicates keeps one tab per page, and undo brings the others back",
   expect(await run(page, "undo")).toEqual({ action: "undo", count: 0 });
 });
 
+test("undo restores the tabs Nook closed, not a later tab the user closed at the same address", async ({ context }) => {
+  const page = context.pages()[0] as Page;
+  await openTabs(context, ["http://a.example.com/x", "http://a.example.com/x#part"]);
+  const before = await windowTabs(page);
+  expect(await run(page, "close-duplicates")).toEqual({ action: "close-duplicates", count: 1 });
+  // Nook found its own recently closed entry, so undo can restore the tab with its history.
+  const sessionId = await page.evaluate(async () => {
+    const { "tabs.undo": record } = await chrome.storage.session.get("tabs.undo");
+    return (record as { tabs: { sessionId?: string }[] }).tabs[0]?.sessionId;
+  });
+  expect(sessionId).toEqual(expect.any(String));
+
+  // The user opens the same address again and closes it themselves.
+  await openTabs(context, ["http://a.example.com/x#part"]);
+  await page.evaluate(async () => {
+    const tabs = await chrome.tabs.query({ currentWindow: true });
+    const last = tabs[tabs.length - 1];
+    if (last?.id !== undefined) await chrome.tabs.remove(last.id);
+  });
+  const userEntry = await page.evaluate(async () => (await chrome.sessions.getRecentlyClosed())[0]?.tab?.sessionId);
+
+  expect(await run(page, "undo")).toEqual({ action: "undo", count: 1 });
+  expect(await windowTabs(page)).toEqual(before);
+  // The user's own closed tab is still waiting in the recently closed list.
+  expect(await page.evaluate(async () => (await chrome.sessions.getRecentlyClosed())[0]?.tab?.sessionId)).toBe(
+    userEntry,
+  );
+});
+
 test("group by site groups by registrable domain, and undo puts every tab back", async ({ context }) => {
   const page = context.pages()[0] as Page;
   await openTabs(context, [

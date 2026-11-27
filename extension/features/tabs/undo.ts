@@ -20,6 +20,8 @@ export interface ClosedTab {
   index: number;
   pinned: boolean;
   groupId: number;
+  /** The browser's recently closed entry for this tab, when it could be found right after the close. */
+  sessionId?: string;
 }
 
 export type UndoRecord =
@@ -44,18 +46,20 @@ export interface RecentTab {
 }
 
 /**
- * Pairs each closed tab with an entry of the recently closed list, by exact
- * URL, newest entry first, each entry used once. Tabs with no entry (the list
- * holds 25, and other closes may have pushed ours out) get `undefined` and
- * are reopened by URL instead.
+ * Finds the recently closed entries that Nook's own close created: entries
+ * missing from the list taken just before the close, paired with the closed
+ * tabs by URL, each used once. Matching only new entries means a tab the user
+ * closes later at the same address is never mistaken for Nook's. A tab with
+ * no new entry gets `undefined`, and undo reopens it by URL.
  */
-export function matchRecentlyClosed(
+export function findOwnEntries(
   closed: readonly ClosedTab[],
-  recent: readonly RecentTab[],
+  before: ReadonlySet<string>,
+  after: readonly RecentTab[],
 ): (string | undefined)[] {
-  const used = new Set<string>();
+  const used = new Set(before);
   return closed.map((tab) => {
-    const entry = recent.find((r) => r.url === tab.url && !used.has(r.sessionId));
+    const entry = after.find((r) => r.url === tab.url && !used.has(r.sessionId));
     if (!entry) return undefined;
     used.add(entry.sessionId);
     return entry.sessionId;

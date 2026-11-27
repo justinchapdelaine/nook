@@ -1,25 +1,21 @@
 import { expect, test } from "vitest";
 import type { ClosedTab } from "./undo";
-import { matchRecentlyClosed } from "./undo";
+import { findOwnEntries } from "./undo";
 
 const closed = (url: string): ClosedTab => ({ url, windowId: 1, index: 0, pinned: false, groupId: -1 });
 
-test("pairs each closed tab with a recently closed entry by URL, each entry once", () => {
-  const recent = [
-    { sessionId: "s3", url: "https://a.com/" },
-    { sessionId: "s2", url: "https://b.com/" },
+test("pairs each closed tab with an entry its own close created, by URL, each entry once", () => {
+  const after = [
+    { sessionId: "s4", url: "https://a.com/" },
+    { sessionId: "s3", url: "https://b.com/" },
+    { sessionId: "s2", url: "https://a.com/" },
     { sessionId: "s1", url: "https://a.com/" },
   ];
-  expect(
-    matchRecentlyClosed([closed("https://a.com/"), closed("https://b.com/"), closed("https://a.com/")], recent),
-  ).toEqual(["s3", "s2", "s1"]);
+  const tabs = [closed("https://a.com/"), closed("https://b.com/"), closed("https://a.com/")];
+  expect(findOwnEntries(tabs, new Set(["s1"]), after)).toEqual(["s4", "s3", "s2"]);
 });
 
-test("leaves tabs that fell off the recently closed list for reopening by URL", () => {
-  expect(
-    matchRecentlyClosed(
-      [closed("https://a.com/"), closed("https://c.com/")],
-      [{ sessionId: "s1", url: "https://a.com/" }],
-    ),
-  ).toEqual(["s1", undefined]);
+test("never takes an entry that was already in the list before the close", () => {
+  const after = [{ sessionId: "s1", url: "https://a.com/" }];
+  expect(findOwnEntries([closed("https://a.com/")], new Set(["s1"]), after)).toEqual([undefined]);
 });

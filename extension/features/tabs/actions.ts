@@ -3,8 +3,8 @@
 // reads the window, saves the undo record, then makes the change.
 import { findDuplicates } from "./duplicates";
 import { colorFor, planSiteGroups } from "./group-by-site";
-import type { ClosedTab, MovedTab, UndoRecord } from "./undo";
-import { matchRecentlyClosed, saveUndo, takeUndo } from "./undo";
+import type { ClosedTab, MovedTab, RecentTab, UndoRecord } from "./undo";
+import { findOwnEntries, saveUndo, takeUndo } from "./undo";
 
 /** The registrable domain for display, or the hostname when there is none (localhost, intranet names, IPs). */
 function siteOf(hostname: string): string {
@@ -51,9 +51,21 @@ export async function closeDuplicates(windowId: number): Promise<number> {
       ? [{ url: t.url, windowId: t.windowId, index: t.index, pinned: t.pinned, groupId: t.groupId }]
       : [],
   );
+  const before = new Set((await recentlyClosedTabs()).map((r) => r.sessionId));
   await saveUndo({ kind: "close", at: Date.now(), tabs: closed });
   await chrome.tabs.remove(ids);
+  // Note which recently closed entries are Nook's, so undo restores those and
+  // not a tab the user closes later at the same address.
+  const own = findOwnEntries(closed, before, await recentlyClosedTabs());
+  await saveUndo({ kind: "close", at: Date.now(), tabs: closed.map((tab, i) => ({ ...tab, sessionId: own[i] })) });
   return ids.length;
+}
+
+async function recentlyClosedTabs(): Promise<RecentTab[]> {
+  const entries = await chrome.sessions.getRecentlyClosed({ maxResults: chrome.sessions.MAX_SESSION_RESULTS });
+  return entries.flatMap((entry) =>
+    entry.tab?.sessionId ? [{ sessionId: entry.tab.sessionId, url: entry.tab.url }] : [],
+  );
 }
 
 /** Undoes the last grouping or close. Returns how many tabs were put back; 0 when there was nothing to undo. */
@@ -81,18 +93,15 @@ async function ungroup(record: Extract<UndoRecord, { kind: "group" }>): Promise<
 
 async function reopen(record: Extract<UndoRecord, { kind: "close" }>): Promise<number> {
   const [active] = await chrome.tabs.query({ active: true, lastFocusedWindow: true });
-  const recent = (await chrome.sessions.getRecentlyClosed({ maxResults: chrome.sessions.MAX_SESSION_RESULTS })).flatMap(
-    (entry) => (entry.tab?.sessionId ? [{ sessionId: entry.tab.sessionId, url: entry.tab.url }] : []),
-  );
-  const sessionIds = matchRecentlyClosed(record.tabs, recent);
-  const order = record.tabs
-    .map((tab, i) => ({ tab, sessionId: sessionIds[i] }))
-    .sort((a, b) => a.tab.index - b.tab.index);
+  const recent = new Set((await recentlyClosedTabs()).map((r) => r.sessionId));
   let count = 0;
-  for (const { tab, sessionId } of order) {
-    // Restoring from the session brings back the tab's history; past the
-    // recently closed list's 25 entries, reopening by URL is the fallback.
-    const restored = sessionId ? (await chrome.sessions.restore(sessionId).catch(() => undefined))?.tab : undefined;
+  for (const tab of [...record.tabs].sort((a, b) => a.index - b.index)) {
+    // Restoring Nook's own entry brings back the tab's history. Once other
+    // closes push it past the list's 25 entries, reopening by URL is the fallback.
+    const restored =
+      tab.sessionId && recent.has(tab.sessionId)
+        ? (await chrome.sessions.restore(tab.sessionId).catch(() => undefined))?.tab
+        : undefined;
     const reopened = restored ?? (await reopenByUrl(tab));
     if (reopened?.id === undefined) continue;
     count++;
