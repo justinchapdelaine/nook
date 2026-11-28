@@ -92,6 +92,7 @@ Each phase ends with a PR and is done when the listed things are true. The order
 - Progress: blocks being translated pulse gently, then cross-fade; reduced motion gets a static dim. A small corner indicator shows progress and offers cancel.
 - **Show original** swaps the original text back into the original nodes, instantly. A `MutationObserver` picks up blocks a page adds or re-renders.
 - In this phase every block is translated as plain text: a block with inline formatting keeps its nodes, but their text is emptied and the translation goes into one new text node placed directly in the block, outside any bold, italic or link wrapper, so the whole block doesn't turn bold or clickable. Links in such blocks stop working until phase 5. Show original removes the added node and puts the original text back.
+- Translate selection moves to the same splitting: a selection of several paragraphs is sent one paragraph at a time and streamed into the bubble in order. Until then the whole selection goes in one request, and 0.8B often merges its paragraphs.
 - Done when articles, docs and one dynamic site translate and restore cleanly.
 
 ### 5. Inline formatting
