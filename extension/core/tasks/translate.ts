@@ -26,7 +26,7 @@ export function translatePrompt(text: string, from: string | undefined, to: stri
   return [
     {
       role: "system",
-      content: `Translate the user's text${source} to ${languageName(to)}. Reply with the translation only, without notes, quotes or explanations.`,
+      content: `Translate the user's text${source} to ${languageName(to)}. Keep the same paragraphs and line breaks. Reply in plain text with the translation only, without Markdown, notes, quotes or explanations.`,
     },
     { role: "user", content: text },
   ];
