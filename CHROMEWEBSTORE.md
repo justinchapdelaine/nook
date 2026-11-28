@@ -1,6 +1,6 @@
 # Chrome Web Store listing: Nook
 
-Last updated: 2026-11-27
+Last updated: 2026-11-28
 
 What the Chrome Developer Dashboard asks for, kept beside the code so the listing never has to catch up. Every PR that adds or widens a permission adds its justification here. The listing text, privacy policy and graphics are finished in phase 6 of [docs/plan.md](docs/plan.md); until then those sections are drafts or placeholders.
 
@@ -24,10 +24,10 @@ The manifest asks for no host permissions. Nook reads a web page only when the u
 | --- | --- | --- |
 | `contextMenus` | permissions | Adds Nook's commands to right-click menus: Group tabs, Close duplicates, Undo last change and Settings on its toolbar icon and the browser's tabs, and Translate selection on web pages when text is selected. These menus are the main way to use Nook. |
 | `storage` | permissions | Keeps Nook's settings (the language to translate into, the model, sites where translation is off) and a record of the last tab change (which tabs were grouped or closed, and where they were) for the current browser session, so Undo last change can put them back. Nothing stored leaves the device, and the undo record is cleared when the browser closes. |
-| `tabGroups` | permissions | Group tabs creates tab groups named after each site, adds tabs to an existing group for that site, and removes them again on undo. |
+| `tabGroups` | permissions | Group tabs creates tab groups named after each topic (or each site, without the model), adds tabs to an existing group, and removes them again on undo. |
 | `sessions` | permissions | Undo last change reopens tabs that Close duplicates closed from the browser's recently closed list, so they come back with their back and forward history. |
 | `publicSuffix` | permissions | Group tabs puts tabs from the same site together, for example news.bbc.co.uk and www.bbc.co.uk, by asking the browser for each address's registrable domain. |
-| `tabs` | optional_permissions | Not granted at install. Asked for the first time the user runs a tab tool. Nook reads the addresses of the tabs in the current window to find tabs showing the same page and to group tabs by site. Addresses are compared on the device and never sent anywhere. |
+| `tabs` | optional_permissions | Not granted at install. Asked for the first time the user runs a tab tool. Nook reads the addresses and titles of the tabs in the current window to find tabs showing the same page and to group tabs by site or by topic. Addresses are compared, and titles sorted into topics by the on-device model, on the device; neither is sent anywhere. |
 | `activeTab` | permissions | When the user picks Translate selection from the page's right-click menu or presses its shortcut, Nook gets access to that one tab for that moment, to read the selected text and show its translation under it. Nook has no access to pages otherwise. |
 | `scripting` | permissions | Translate selection adds Nook's translator to the page the user is on, only after the user picks Translate selection there. Nothing is added to pages in advance. |
 | `offscreen` | permissions | The translation model runs in a hidden extension page, which keeps it loaded between translations. Nook closes that page after a period without use (10 minutes by default) to free the graphics card's memory. |
@@ -35,9 +35,9 @@ The manifest asks for no host permissions. Nook reads a web page only when the u
 
 ## Privacy and data use (draft)
 
-**Does the extension collect user data?** No. Tab addresses are read on the device only to run the tab tool the user picked, and are kept, for undo, only until the browser closes. Text the user selects to translate is read only after they pick Translate selection, is translated on the device by a model running on its graphics card, and is never stored or sent anywhere. There is no analytics or remote code.
+**Does the extension collect user data?** No. Tab addresses and titles are read on the device only to run the tab tool the user picked (titles go to the on-device model when grouping by topic), and are kept, for undo, only until the browser closes. Text the user selects to translate is read only after they pick Translate selection, is translated on the device by a model running on its graphics card, and is never stored or sent anywhere. There is no analytics or remote code.
 
-**Network use.** The only network request Nook makes is downloading the translation model's weights from Hugging Face (huggingface.co), once, after the user presses Download on the settings page, which states the size. The model's code ships inside the extension package; only its weights are downloaded. No page text, address or setting is ever sent.
+**Network use.** The only network request Nook makes is downloading the translation model's weights from Hugging Face (huggingface.co), once, after the user presses Download on the settings page, which states the size. The model's code ships inside the extension package; only its weights are downloaded. No page text, tab title, address or setting is ever sent.
 
 The privacy policy URL is to be added in phase 6.
 
@@ -51,9 +51,11 @@ Not made yet: store icon (128 by 128), at least one screenshot (1280 by 800), sm
 | --- | --- | --- | --- |
 | 0.1.0 | 2026-11-27 | Tab tools: group by site, close duplicates, undo. | Draft, not submitted |
 | 0.2.0 | 2026-11-27 | Translate selection, on the device, with a one-time model download from the settings page. | Draft, not submitted |
+| 0.3.0 | 2026-11-28 | Group tabs sorts tabs by topic and names the groups with the on-device model, and groups by site without it. | Draft, not submitted |
 
 ## Review notes
 
 - The keyboard shortcuts (Alt+Shift+L, Alt+Shift+G, Alt+Shift+D, Alt+Shift+U) need no permission.
 - The extension page content security policy allows `'wasm-unsafe-eval'` because the on-device model's code is WebAssembly, compiled at run time. Those files ship inside the package (`model-libs/`); none is fetched from the network.
 - To test translation: open Settings, download the model, then select text on any page and pick Translate selection.
+- To test grouping by topic: with the model downloaded, open a few tabs on different subjects and pick Group tabs from the toolbar icon's right-click menu.

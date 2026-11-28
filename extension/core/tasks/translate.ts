@@ -2,8 +2,8 @@
 // answer back, and checks it. Features call this and never see the model or
 // the host: this module owns the connection and turns host errors into reasons.
 import type { PendingRequest } from "../runtime/client";
-import { HostClient, HostRequestError } from "../runtime/client";
-import type { ChatMessage, HostErrorCode, Priority } from "../runtime/protocol";
+import type { ChatMessage, Priority } from "../runtime/protocol";
+import { hostClient, toTaskError } from "./host";
 import { findRepetition } from "./repetition";
 
 /** Longest text one request takes: with its answer, it fits the 8K context window even for Chinese or Japanese. */
@@ -52,21 +52,7 @@ export interface Translation {
   cut?: "repetition" | "length";
 }
 
-/** Why a translation failed. `reason` is set when the feature can act on it. */
-export class TranslateError extends Error {
-  constructor(
-    message: string,
-    readonly reason?: HostErrorCode,
-  ) {
-    super(message);
-    this.name = "TranslateError";
-  }
-}
-
-let client: HostClient | undefined;
-
 export function translate(text: string, options: TranslateOptions): PendingRequest<Translation> {
-  client ??= new HostClient();
   // Small models wrap titles in Markdown emphasis even when asked not to, and the bubble shows
   // plain text, so drop asterisks the source didn't have.
   const clean = text.includes("*")
@@ -74,7 +60,7 @@ export function translate(text: string, options: TranslateOptions): PendingReque
     : (reply: string) => reply.replaceAll("*", "").trim();
   let sofar = "";
   let repeatedAt = -1;
-  const request = client.request(
+  const request = hostClient().request(
     {
       type: "generate",
       request: {
@@ -110,8 +96,7 @@ export function translate(text: string, options: TranslateOptions): PendingReque
     } catch (error) {
       // The guard cancelled the reply itself; what came before the loop is the answer.
       if (repeatedAt >= 0) return { text: clean(sofar), cut: "repetition" };
-      if (error instanceof HostRequestError) throw new TranslateError(error.message, error.code);
-      throw new TranslateError(error instanceof Error ? error.message : String(error));
+      throw toTaskError(error);
     }
   })();
   return { result, cancel: request.cancel };

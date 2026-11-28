@@ -17,6 +17,8 @@ export function isTabAction(value: unknown): value is TabAction {
 export interface TabActionResult {
   action: TabAction;
   count: number;
+  /** For group-tabs: whether the model grouped by topic, or the rules by site. */
+  by?: "topic" | "site";
   error?: "no-permission" | (string & {});
 }
 

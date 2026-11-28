@@ -1,64 +1,7 @@
-import type { BrowserContext, Page } from "@playwright/test";
-import type { TabAction, TabActionResult } from "../../extension/core/messages";
+import type { Page } from "@playwright/test";
 import { UNDO_KEY } from "../../extension/features/tabs/undo";
 import { expect, nookTest as test } from "./fixtures";
-
-/** Opens the settings page, which serves as the test's window into the extension. */
-async function openSettings(page: Page, extensionId: string) {
-  await page.goto(`chrome-extension://${extensionId}/options.html`);
-  await expect(page.locator("#access-button")).toBeVisible();
-}
-
-/**
- * Runs a tab action the way a page click would: the message is sent from a
- * real click, so the service worker's permission request has its user gesture.
- */
-async function run(page: Page, action: TabAction): Promise<TabActionResult> {
-  const result = page.evaluate(
-    (action) =>
-      new Promise<TabActionResult>((resolve) => {
-        document.addEventListener(
-          "click",
-          async () => resolve(await chrome.runtime.sendMessage({ type: "tabs:run", action })),
-          {
-            once: true,
-          },
-        );
-      }),
-    action,
-  );
-  await page.locator("h1").click();
-  return result;
-}
-
-/** Opens tabs in the settings page's window and waits for them to load. */
-async function openTabs(context: BrowserContext, urls: string[]) {
-  for (const url of urls) {
-    const loaded = context.waitForEvent("page");
-    await context.pages()[0]?.evaluate((url) => chrome.tabs.create({ url, active: false }), url);
-    await (await loaded).waitForLoadState();
-  }
-}
-
-/** The window's tabs, left to right, as URLs, with each tab's group title where it has one. */
-async function windowTabs(page: Page) {
-  return page.evaluate(async () => {
-    const { id: windowId } = await chrome.windows.getCurrent();
-    const groups = new Map((await chrome.tabGroups.query({ windowId })).map((g) => [g.id, g.title]));
-    return (await chrome.tabs.query({ windowId })).map((t) => ({ url: t.url, group: groups.get(t.groupId) }));
-  });
-}
-
-/** Closes the rightmost tab in the settings page's window, as the user would. */
-async function closeLastTab(page: Page) {
-  await page.evaluate(async () => {
-    const tabs = await chrome.tabs.query({ currentWindow: true });
-    const last = tabs[tabs.length - 1];
-    if (last?.id !== undefined) await chrome.tabs.remove(last.id);
-  });
-}
-
-const badge = (page: Page) => page.evaluate(() => chrome.action.getBadgeText({}));
+import { badge, closeLastTab, openSettings, openTabs, run, windowTabs } from "./tab-helpers";
 
 test.beforeEach(async ({ context, extensionId }) => {
   // Use the first tab for the settings page, so the window holds only it and the tabs a test opens.
@@ -71,7 +14,7 @@ test("the settings page lists the shortcuts and shows tab access", async ({ cont
   await expect(page.locator("#access")).toContainText("can read your tabs");
   await expect(page.locator("#shortcuts dd")).toHaveText([
     "Translate the selected text",
-    "Group tabs by site",
+    "Group tabs by topic or site",
     "Close duplicate tabs",
     "Undo the last tab change",
   ]);
@@ -81,7 +24,7 @@ test("the settings page lists the shortcuts and shows tab access", async ({ cont
 
 test("close duplicates keeps one tab per page, and undo brings the others back", async ({ context }) => {
   const page = context.pages()[0] as Page;
-  await openTabs(context, [
+  await openTabs(page, [
     "http://a.example.com/x",
     "http://b.example.com/",
     "http://a.example.com/x#part",
@@ -111,7 +54,7 @@ test("close duplicates keeps one tab per page, and undo brings the others back",
 
 test("undo restores the tabs Nook closed, not a later tab the user closed at the same address", async ({ context }) => {
   const page = context.pages()[0] as Page;
-  await openTabs(context, ["http://a.example.com/x", "http://a.example.com/x#part"]);
+  await openTabs(page, ["http://a.example.com/x", "http://a.example.com/x#part"]);
   const before = await windowTabs(page);
   expect(await run(page, "close-duplicates")).toEqual({ action: "close-duplicates", count: 1 });
   // Nook found its own recently closed entry, so undo can restore the tab with its history.
@@ -122,7 +65,7 @@ test("undo restores the tabs Nook closed, not a later tab the user closed at the
   expect(sessionId).toEqual(expect.any(String));
 
   // The user opens the same address again and closes it themselves.
-  await openTabs(context, ["http://a.example.com/x#part"]);
+  await openTabs(page, ["http://a.example.com/x#part"]);
   await closeLastTab(page);
   const userEntry = await page.evaluate(async () => (await chrome.sessions.getRecentlyClosed())[0]?.tab?.sessionId);
 
@@ -136,7 +79,7 @@ test("undo restores the tabs Nook closed, not a later tab the user closed at the
 
 test("undo brings back a group that closing its duplicate tabs emptied", async ({ context }) => {
   const page = context.pages()[0] as Page;
-  await openTabs(context, ["http://a.example.com/x", "http://a.example.com/x#one", "http://a.example.com/x#two"]);
+  await openTabs(page, ["http://a.example.com/x", "http://a.example.com/x#one", "http://a.example.com/x#two"]);
   await page.evaluate(async () => {
     const tabs = await chrome.tabs.query({ currentWindow: true });
     const ids = tabs.slice(-2).map((t) => t.id) as [number, number];
@@ -151,7 +94,7 @@ test("undo brings back a group that closing its duplicate tabs emptied", async (
   // Push Nook's entries off the browser's recently closed list, so undo has to
   // reopen by URL and make the group itself.
   for (let i = 0; i < 25; i++) {
-    await openTabs(context, [`http://filler.test/${i}`]);
+    await openTabs(page, [`http://filler.test/${i}`]);
     await closeLastTab(page);
   }
 
@@ -162,7 +105,7 @@ test("undo brings back a group that closing its duplicate tabs emptied", async (
 
 test("group by site groups by registrable domain, and undo puts every tab back", async ({ context }) => {
   const page = context.pages()[0] as Page;
-  await openTabs(context, [
+  await openTabs(page, [
     "http://news.example.co.uk/a",
     "http://docs.example.com/",
     "http://other.test/",
@@ -170,7 +113,7 @@ test("group by site groups by registrable domain, and undo puts every tab back",
     "http://www.example.com/c",
   ]);
 
-  expect(await run(page, "group-tabs")).toEqual({ action: "group-tabs", count: 4 });
+  expect(await run(page, "group-tabs")).toEqual({ action: "group-tabs", count: 4, by: "site" });
   const grouped = await windowTabs(page);
   expect(grouped.filter((t) => t.group === "example.co.uk").map((t) => t.url)).toEqual([
     "http://news.example.co.uk/a",
@@ -183,8 +126,8 @@ test("group by site groups by registrable domain, and undo puts every tab back",
   expect(grouped.find((t) => t.url === "http://other.test/")?.group).toBeUndefined();
 
   // A tab opened later joins its site's existing group on the next run.
-  await openTabs(context, ["http://shop.example.com/"]);
-  expect(await run(page, "group-tabs")).toEqual({ action: "group-tabs", count: 1 });
+  await openTabs(page, ["http://shop.example.com/"]);
+  expect(await run(page, "group-tabs")).toEqual({ action: "group-tabs", count: 1, by: "site" });
   expect((await windowTabs(page)).find((t) => t.url === "http://shop.example.com/")?.group).toBe("example.com");
 
   // Undo reverses the last run only.
@@ -194,9 +137,9 @@ test("group by site groups by registrable domain, and undo puts every tab back",
 
 test("undo still works after the service worker restarts", async ({ context }) => {
   const page = context.pages()[0] as Page;
-  await openTabs(context, ["http://a.example.com/", "http://b.example.org/", "http://c.example.com/"]);
+  await openTabs(page, ["http://a.example.com/", "http://b.example.org/", "http://c.example.com/"]);
   const before = await windowTabs(page);
-  expect(await run(page, "group-tabs")).toEqual({ action: "group-tabs", count: 2 });
+  expect(await run(page, "group-tabs")).toEqual({ action: "group-tabs", count: 2, by: "site" });
 
   // Stop the service worker, as the browser does when it is idle, and wait until it has stopped.
   const cdp = await context.newCDPSession(page);

@@ -6,7 +6,7 @@ type Command = { suggested_key: { default: string }; description: string };
 
 // Each tab action is a command, so a renamed action can't silently lose its shortcut.
 const TAB_COMMANDS = {
-  "group-tabs": { suggested_key: { default: "Alt+Shift+G" }, description: "Group tabs by site" },
+  "group-tabs": { suggested_key: { default: "Alt+Shift+G" }, description: "Group tabs by topic or site" },
   "close-duplicates": { suggested_key: { default: "Alt+Shift+D" }, description: "Close duplicate tabs" },
   undo: { suggested_key: { default: "Alt+Shift+U" }, description: "Undo the last tab change" },
 } satisfies Record<TabAction, Command>;
@@ -43,7 +43,7 @@ export default defineConfig({
     const testBuild = mode === "e2e" || mode === "smoke";
     return {
       name: "Nook",
-      version: "0.2.0",
+      version: "0.3.0",
       description: "Tab tools and translation that run only on your device.",
       minimum_chrome_version: "153",
       // Each permission's reason is in CHROMEWEBSTORE.md.

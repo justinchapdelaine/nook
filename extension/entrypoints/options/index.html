@@ -41,11 +41,11 @@
       </section>
 
       <section id="model" aria-labelledby="model-heading">
-        <h2 id="model-heading">Translation model</h2>
+        <h2 id="model-heading">Language model</h2>
         <p>
-          Nook translates with a language model that runs on this device's graphics processor. The model is downloaded
-          once, from Hugging Face. <strong>That download is the only time Nook uses the network</strong>; the text you
-          translate never leaves this device.
+          Nook translates, and groups tabs by topic, with a language model that runs on this device's graphics
+          processor. The model is downloaded once, from Hugging Face. <strong>That download is the only time Nook uses
+          the network</strong>; the text you translate and your tabs' titles never leave this device.
         </p>
         <fieldset id="models">
           <legend>Model</legend>
@@ -72,8 +72,8 @@
       <section aria-labelledby="tabs-heading">
         <h2 id="tabs-heading">Tab tools</h2>
         <p>
-          Group tabs by site, close duplicate tabs and undo the last change, from the toolbar icon's right-click menu,
-          a tab's right-click menu, or the shortcuts below.
+          Group tabs by topic, close duplicate tabs and undo the last change, from the toolbar icon's right-click menu,
+          a tab's right-click menu, or the shortcuts below. Until the model is downloaded, Group tabs groups by site.
         </p>
         <p id="access" aria-live="polite"></p>
         <button type="button" id="access-button" hidden></button>

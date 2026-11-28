@@ -6,14 +6,14 @@ import { defineBackground } from "wxt/utils/define-background";
 /** True only in the test builds (see wxt.config.ts). */
 declare const __NOOK_TEST_BUILD__: boolean;
 
-import { clearBadge, flashBadge } from "../core/badge";
+import { clearBadge, flashBadge, showBadge } from "../core/badge";
 import type { NookMessage, TabAction, TabActionResult, TranslateSelectionMessage } from "../core/messages";
 import { isTabAction } from "../core/messages";
 import { closeOffscreen, ensureOffscreen } from "../core/offscreen";
 import { TABS_PERMISSION } from "../core/permissions";
 import type { EnsureResult, OffscreenMessage } from "../core/runtime/protocol";
 import { getSettings, isExcluded } from "../core/settings";
-import { closeDuplicates, groupBySite, undoLast } from "../features/tabs/actions";
+import { closeDuplicates, groupTabs, undoLast } from "../features/tabs/actions";
 
 const TAB_MENUS: { id: TabAction; title: string }[] = [
   { id: "group-tabs", title: "Group tabs" },
@@ -23,15 +23,21 @@ const TAB_MENUS: { id: TabAction; title: string }[] = [
 const SETTINGS_MENU = "settings";
 const TRANSLATE_SELECTION = "translate-selection";
 
-const RUN: Record<TabAction, (windowId: number) => Promise<number>> = {
-  "group-tabs": groupBySite,
-  "close-duplicates": closeDuplicates,
-  undo: undoLast,
+const showAsking = () =>
+  void showBadge("…", "grouping tabs by topic…").catch((error: unknown) =>
+    console.error("Nook: badge update failed", error),
+  );
+
+const RUN: Record<TabAction, (windowId: number) => Promise<Omit<TabActionResult, "action">>> = {
+  "group-tabs": (windowId) => groupTabs(windowId, showAsking),
+  "close-duplicates": async (windowId) => ({ count: await closeDuplicates(windowId) }),
+  undo: async () => ({ count: await undoLast() }),
 };
 
 // Tab actions run one at a time, so a double press can't interleave two
-// changes or save the wrong undo record. A queue in memory is enough: each
-// action takes well under a second, far less than the worker's idle limit.
+// changes or save the wrong undo record. A queue in memory is enough: most
+// actions take well under a second, and grouping by topic a few seconds,
+// during which the model host's messages keep the worker awake.
 let queue: Promise<unknown> = Promise.resolve();
 
 /**
@@ -65,7 +71,7 @@ async function runAfter(
     } else {
       const target = windowId ?? (await chrome.windows.getLastFocused()).id;
       if (target === undefined) throw new Error("No browser window is open");
-      result = { action, count: await RUN[action](target) };
+      result = { action, ...(await RUN[action](target)) };
     }
   } catch (error) {
     console.error(`Nook: ${action} failed`, error);
@@ -81,7 +87,7 @@ async function runAfter(
 
 const plural = (n: number, word: string) => `${n} ${word}${n === 1 ? "" : "s"}`;
 
-function report({ action, count, error }: TabActionResult): Promise<void> {
+function report({ action, count, error, by }: TabActionResult): Promise<void> {
   if (error === "no-permission") return flashBadge("!", "error", "tab tools need access to your tabs");
   if (error) return flashBadge("!", "error", `that didn't work (${error})`);
   if (count === 0) {
@@ -89,7 +95,7 @@ function report({ action, count, error }: TabActionResult): Promise<void> {
     return flashBadge("0", "info", none[action]);
   }
   const done = {
-    "group-tabs": `grouped ${plural(count, "tab")} by site`,
+    "group-tabs": `grouped ${plural(count, "tab")} by ${by ?? "site"}`,
     "close-duplicates": `closed ${plural(count, "duplicate tab")}`,
     undo: `put back ${plural(count, "tab")}`,
   };

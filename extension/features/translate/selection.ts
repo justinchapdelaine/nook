@@ -2,7 +2,8 @@
 // streams its translation into a bubble under it.
 import type { OpenSetupMessage } from "../../core/messages";
 import { getSettings } from "../../core/settings";
-import { MAX_INPUT_CHARS, TranslateError, translate } from "../../core/tasks/translate";
+import { TaskError } from "../../core/tasks/host";
+import { MAX_INPUT_CHARS, translate } from "../../core/tasks/translate";
 import type { BubbleView } from "./bubble";
 import { openBubble } from "./bubble";
 import { detectLanguage, sameLanguage } from "./language";
@@ -77,7 +78,7 @@ export async function translateSelection(fallbackText = ""): Promise<void> {
     };
     bubble.setStatus(cut ? `${done}${note[cut]}` : done);
   } catch (error) {
-    const reason = error instanceof TranslateError ? error.reason : undefined;
+    const reason = error instanceof TaskError ? error.reason : undefined;
     if (reason === "cancelled") return;
     if (reason === "not-downloaded") {
       bubble.setStatus("Nook needs to download its translation model first. Opening settings…");

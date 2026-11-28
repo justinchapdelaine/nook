@@ -1,8 +1,17 @@
 // The tab tools, applied to a window with the tabs and tabGroups APIs.
-// The decisions are made by the pure planners beside this file; this file
-// reads the window, saves the undo record, then makes the change.
+// The decisions are made by the pure planners beside this file and, for
+// grouping by topic, the model; this file reads the window, saves the undo
+// record, then makes the change.
+
+import { getSettings } from "../../core/settings";
+import type { TopicGroup } from "../../core/tasks/group-tabs";
+import { groupTabs as askModel } from "../../core/tasks/group-tabs";
+import { TaskError } from "../../core/tasks/host";
 import { findDuplicates } from "./duplicates";
+import type { PlannedGroup } from "./group-by-site";
 import { NO_GROUP, planSiteGroups } from "./group-by-site";
+import type { PreparedTopics } from "./group-by-topic";
+import { planTopicGroups, prepareTopics, worthAsking } from "./group-by-topic";
 import type { ClosedTab, MovedTab, RecentTab, UndoRecord } from "./undo";
 import { findOwnEntries, saveUndo, takeUndo } from "./undo";
 
@@ -11,21 +20,62 @@ function siteOf(hostname: string): string {
   return chrome.publicSuffix.getDomain(hostname, { allowIPAddress: true, encoding: "display" }) ?? hostname;
 }
 
-/** Groups the window's ungrouped tabs by site. Returns how many tabs moved. */
-export async function groupBySite(windowId: number): Promise<number> {
+/** How a grouping was decided: by the model, or by site alone (no model downloaded, or its answer didn't work). */
+export type GroupedBy = "topic" | "site";
+
+/**
+ * Groups the window's ungrouped tabs: by topic with the model when one is
+ * downloaded, else by site. `onAsking` is called before the model is asked,
+ * which takes a few seconds. Returns how many tabs moved, and how.
+ */
+export async function groupTabs(windowId: number, onAsking?: () => void): Promise<{ count: number; by: GroupedBy }> {
   const [tabs, groups] = await Promise.all([chrome.tabs.query({ windowId }), chrome.tabGroups.query({ windowId })]);
-  const plan = planSiteGroups(
-    tabs.flatMap((t) => (t.id === undefined ? [] : [{ id: t.id, url: t.url, pinned: t.pinned, groupId: t.groupId }])),
-    groups,
-    siteOf,
+  const candidates = tabs.flatMap((t) =>
+    t.id === undefined ? [] : [{ id: t.id, url: t.url, title: t.title, pinned: t.pinned, groupId: t.groupId }],
   );
-  const moving = new Set(plan.flatMap((group) => group.tabIds));
+  const prepared = prepareTopics(candidates, groups, siteOf);
+  const topics = worthAsking(prepared) ? await askForTopics(prepared, onAsking) : undefined;
+  if (topics) return { count: await applyPlan(windowId, planTopicGroups(prepared, topics, groups)), by: "topic" };
+  return { count: await applyPlan(windowId, planSiteGroups(candidates, groups, siteOf)), by: "site" };
+}
+
+/** The model's groups, or undefined when it can't give any, so the rules decide alone. */
+async function askForTopics(prepared: PreparedTopics, onAsking?: () => void): Promise<TopicGroup[] | undefined> {
+  onAsking?.();
+  try {
+    const { model } = await getSettings();
+    const items = prepared.items.map(({ titles, site }) => ({ titles, site }));
+    return await askModel(items, prepared.existing, { family: model });
+  } catch (error) {
+    // With no model downloaded or no WebGPU, grouping by site is the expected result, not a failure.
+    const reason = error instanceof TaskError ? error.reason : undefined;
+    if (reason !== "not-downloaded" && reason !== "no-webgpu")
+      console.warn("Nook: grouping by topic failed, so grouping by site", error);
+    return undefined;
+  }
+}
+
+/**
+ * Makes the planned groups. The window is read again first, since asking the
+ * model takes a while: tabs closed, pinned or grouped since then are left
+ * out, and a group to add to that has gone is made again.
+ */
+async function applyPlan(windowId: number, plan: PlannedGroup[]): Promise<number> {
+  const [tabs, groups] = await Promise.all([chrome.tabs.query({ windowId }), chrome.tabGroups.query({ windowId })]);
+  const free = new Set(tabs.flatMap((t) => (t.id !== undefined && !t.pinned && t.groupId === NO_GROUP ? [t.id] : [])));
+  const live = new Set(groups.map((g) => g.id));
+  const steps = plan.flatMap((group) => {
+    const tabIds = group.tabIds.filter((id) => free.has(id));
+    const groupId = group.groupId !== undefined && live.has(group.groupId) ? group.groupId : undefined;
+    return tabIds.length >= (groupId !== undefined ? 1 : 2) ? [{ ...group, tabIds, groupId }] : [];
+  });
+  const moving = new Set(steps.flatMap((group) => group.tabIds));
   if (moving.size === 0) return 0;
   const moved: MovedTab[] = tabs.flatMap((t) =>
     t.id !== undefined && moving.has(t.id) ? [{ id: t.id, windowId: t.windowId, index: t.index }] : [],
   );
   let saved = false;
-  for (const group of plan) {
+  for (const group of steps) {
     const tabIds = group.tabIds as [number, ...number[]];
     const groupId = await chrome.tabs.group(
       group.groupId !== undefined ? { groupId: group.groupId, tabIds } : { tabIds, createProperties: { windowId } },
