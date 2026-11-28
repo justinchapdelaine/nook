@@ -5,6 +5,8 @@
 // Text containing these words changes how it replies:
 //   "loop"  repeats "la " until stopped, to test the repetition guard
 //   "slow"  streams slowly, to test cancelling a reply part-way
+//   "markdown"  wraps the reply in Markdown emphasis, as small models do
+// The 0.8B model "downloads" over 3 s instead of 0.3 s, to test a download that outlives its page.
 import type { Engine } from "../../extension/core/runtime/engine";
 
 const CACHE = "nook-fake-models";
@@ -18,9 +20,10 @@ export function createEngine(): Engine {
     async load(build, onProgress) {
       const cache = await caches.open(CACHE);
       if (!(await cache.match(cacheKey(build.id)))) {
+        const step = build.id.startsWith("Qwen3.5-0.8B") ? 1000 : 100;
         for (const fraction of [0, 0.5, 1]) {
           onProgress(`Fetching ${build.id}`, fraction);
-          await sleep(100);
+          await sleep(step);
         }
         await cache.put(cacheKey(build.id), new Response("weights"));
       }
@@ -34,7 +37,7 @@ export function createEngine(): Engine {
       const text = request.messages.at(-1)?.content ?? "";
       const looping = /\bloop\b/i.test(text);
       const delay = /\bslow\b/i.test(text) ? 300 : 10;
-      const reply = text.toUpperCase();
+      const reply = /\bmarkdown\b/i.test(text) ? `*${text.toUpperCase()}*` : text.toUpperCase();
       for (let i = 0; looping || i < reply.length; i += 3) {
         if (signal.aborted) return { finishReason: "abort" };
         if (i / 3 >= request.maxTokens) return { finishReason: "length" };

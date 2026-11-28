@@ -126,3 +126,68 @@ test("sites where translation is off show it on the badge instead", async ({ pag
   await expect.poll(() => serviceWorker.evaluate(() => chrome.action.getBadgeText({}))).toBe("off");
   expect(await bubble(page)).toBeNull();
 });
+
+test("a download keeps going when the settings page closes, and shows again when it reopens", async ({
+  context,
+  page,
+  extensionId,
+  serviceWorker,
+}) => {
+  await settings(serviceWorker, { model: "Qwen3.5-0.8B" });
+  await openSettings(page, extensionId);
+  await page.getByRole("button", { name: /^Download Qwen3\.5 0\.8B/ }).click();
+  await expect(page.locator("#model-status")).toHaveText(/^Downloading/);
+  await page.close();
+
+  const reopened = await context.newPage();
+  await reopened.goto(`chrome-extension://${extensionId}/options.html`);
+  await expect(reopened.locator("#model-status")).toHaveText(/^Downloading/);
+  await expect(reopened.locator("#download-progress")).toBeVisible();
+  await expect(reopened.locator("#model-status")).toHaveText("Qwen3.5 0.8B is downloaded and ready.", {
+    timeout: 10_000,
+  });
+});
+
+test("an open settings page doesn't keep the model loaded, and a new idle time applies at once", async ({
+  context,
+  page,
+  extensionId,
+  serviceWorker,
+}) => {
+  await download(page, extensionId);
+  await translateOn(page, serviceWorker, "/french");
+  await expect.poll(async () => (await bubble(page))?.status).toBe("Translated from French");
+  // The settings page stays open in another tab while the idle time is shortened.
+  const options = await context.newPage();
+  await options.goto(`chrome-extension://${extensionId}/options.html`);
+  await expect(options.locator("#model-status")).toHaveText("Qwen3.5 2B is downloaded and ready.");
+  expect(await serviceWorker.evaluate(() => chrome.offscreen.hasDocument())).toBe(true);
+  // Set it the way the select does, with a time short enough for a test.
+  await options.evaluate(async () => {
+    const stored = (await chrome.storage.local.get("settings")).settings ?? {};
+    await chrome.storage.local.set({ settings: { ...stored, idleMinutes: 0.02 } });
+    await chrome.runtime.sendMessage({ type: "offscreen:idle-minutes", minutes: 0.02 }).catch(() => {});
+  });
+  await expect
+    .poll(() => serviceWorker.evaluate(() => chrome.offscreen.hasDocument()), { timeout: 10_000 })
+    .toBe(false);
+});
+
+test("runs the source has too, such as dot leaders, come through whole", async ({
+  page,
+  extensionId,
+  serviceWorker,
+}) => {
+  await download(page, extensionId);
+  const line = `Chapitre premier, où tout commence ${".".repeat(48)} 5`;
+  await translateOn(page, serviceWorker, "/french", line);
+  await expect.poll(async () => (await bubble(page))?.status).toBe("Translated from French");
+  expect((await bubble(page))?.text).toBe(line.toUpperCase());
+});
+
+test("Markdown emphasis the source didn't have is left out", async ({ page, extensionId, serviceWorker }) => {
+  await download(page, extensionId);
+  await translateOn(page, serviceWorker, "/french", "Le chat dort sur le canapé depuis ce matin, en markdown.");
+  await expect.poll(async () => (await bubble(page))?.status).toMatch(/^Translated/);
+  expect((await bubble(page))?.text).toBe("LE CHAT DORT SUR LE CANAPÉ DEPUIS CE MATIN, EN MARKDOWN.");
+});
