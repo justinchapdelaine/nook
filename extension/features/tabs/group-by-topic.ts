@@ -8,7 +8,7 @@
 // 2. The model puts items into named groups (core/tasks/group-tabs.ts).
 // 3. planTopicGroups() turns that answer into groups to make or add to.
 import type { TabItem, TopicGroup } from "../../core/tasks/group-tabs";
-import { MAX_ITEMS } from "../../core/tasks/group-tabs";
+import { MAX_ITEMS, shortName } from "../../core/tasks/group-tabs";
 import type { ExistingGroup, GroupCandidate, PlannedGroup } from "./group-by-site";
 import { colorFor, isMovable, planSiteGroups } from "./group-by-site";
 
@@ -80,7 +80,8 @@ export function planTopicGroups(
   topics: readonly TopicGroup[],
   groups: readonly ExistingGroup[],
 ): PlannedGroup[] {
-  const key = (name: string) => name.trim().toLowerCase();
+  // The prompt and the reply carry names cut short, so compare titles that way too.
+  const key = (name: string) => shortName(name).toLowerCase();
   const byName = new Map<string, { name: string; tabIds: number[] }>();
   const used = new Set<number>();
   for (const topic of topics) {

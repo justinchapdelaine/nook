@@ -1,5 +1,5 @@
 import { expect, test } from "vitest";
-import { MAX_ITEMS } from "../../core/tasks/group-tabs";
+import { MAX_ITEMS, shortName } from "../../core/tasks/group-tabs";
 import type { GroupCandidate } from "./group-by-site";
 import { colorFor, NO_GROUP } from "./group-by-site";
 import { planTopicGroups, prepareTopics, worthAsking } from "./group-by-topic";
@@ -91,4 +91,12 @@ test("groups with the same name merge, and an item the model left out keeps its 
     { title: "Weekend", color: colorFor("Weekend"), tabIds: [1, 4] },
     { title: "github.com", color: colorFor("github.com"), tabIds: [2, 3] },
   ]);
+});
+
+test("a long existing group title still matches the shortened name the model sends back", () => {
+  const long = "Research for the kitchen renovation and its budget";
+  const existingGroups = [{ id: 9, title: long }];
+  const prepared = prepareTopics([tab(1, "https://a.com/", "Tiles")], existingGroups, siteOf);
+  const plan = planTopicGroups(prepared, [{ name: shortName(long), items: [0] }], existingGroups);
+  expect(plan).toEqual([{ title: long, color: colorFor(shortName(long)), tabIds: [1], groupId: 9 }]);
 });

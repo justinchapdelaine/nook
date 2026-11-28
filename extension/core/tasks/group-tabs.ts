@@ -33,6 +33,13 @@ const oneLine = (text: string, max: number) => {
   return flat.length > max ? `${flat.slice(0, max - 1)}…` : flat;
 };
 
+/**
+ * A group name as the prompt shows it and a reply's names come back: on one
+ * line, cut to MAX_NAME_CHARS. Compare an existing group's title in this form,
+ * since a long one reaches the model, and comes back, cut short.
+ */
+export const shortName = (name: string) => oneLine(name, MAX_NAME_CHARS);
+
 function itemLine(item: TabItem, n: number): string {
   const titles = item.titles.map((title) => oneLine(title, MAX_TITLE_CHARS) || "Untitled");
   if (titles.length === 1) return `${n}. ${titles[0]} (${item.site})`;
@@ -43,7 +50,7 @@ function itemLine(item: TabItem, n: number): string {
 
 export function groupingPrompt(items: readonly TabItem[], existing: readonly string[]): ChatMessage[] {
   const lines = items.map((item, i) => itemLine(item, i + 1));
-  const names = existing.map((name) => oneLine(name, MAX_NAME_CHARS)).filter(Boolean);
+  const names = existing.map(shortName).filter(Boolean);
   return [
     {
       role: "system",
@@ -105,7 +112,7 @@ export function parseGrouping(reply: string, count: number): TopicGroup[] | { pr
   const used = new Set<number>();
   const result: TopicGroup[] = [];
   for (const group of groups as { name?: unknown; tabs?: unknown }[]) {
-    const name = typeof group?.name === "string" ? oneLine(group.name, MAX_NAME_CHARS) : "";
+    const name = typeof group?.name === "string" ? shortName(group.name) : "";
     if (!name) return { problem: "a group without a name" };
     if (!Array.isArray(group.tabs)) return { problem: `${name} has no tabs` };
     const items: number[] = [];
