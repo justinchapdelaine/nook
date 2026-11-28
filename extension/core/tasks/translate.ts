@@ -67,6 +67,11 @@ let client: HostClient | undefined;
 
 export function translate(text: string, options: TranslateOptions): PendingRequest<Translation> {
   client ??= new HostClient();
+  // Small models wrap titles in Markdown emphasis even when asked not to, and the bubble shows
+  // plain text, so drop asterisks the source didn't have.
+  const clean = text.includes("*")
+    ? (reply: string) => reply.trim()
+    : (reply: string) => reply.replaceAll("*", "").trim();
   let sofar = "";
   let repeatedAt = -1;
   const request = client.request(
@@ -94,17 +99,17 @@ export function translate(text: string, options: TranslateOptions): PendingReque
           sofar = sofar.slice(0, repeatedAt);
           request.cancel();
         }
-        options.onText?.(sofar.trim());
+        options.onText?.(clean(sofar));
       },
     },
   );
   const result = (async (): Promise<Translation> => {
     try {
       const { finishReason } = await request.result;
-      return finishReason === "length" ? { text: sofar.trim(), cut: "length" } : { text: sofar.trim() };
+      return finishReason === "length" ? { text: clean(sofar), cut: "length" } : { text: clean(sofar) };
     } catch (error) {
       // The guard cancelled the reply itself; what came before the loop is the answer.
-      if (repeatedAt >= 0) return { text: sofar.trim(), cut: "repetition" };
+      if (repeatedAt >= 0) return { text: clean(sofar), cut: "repetition" };
       if (error instanceof HostRequestError) throw new TranslateError(error.message, error.code);
       throw new TranslateError(error instanceof Error ? error.message : String(error));
     }
