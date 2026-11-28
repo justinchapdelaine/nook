@@ -17,6 +17,9 @@ export function createHost(engine: Engine, onBusyChange: (busy: boolean) => void
   const open = new Map<number, Map<number, Ticket<unknown>>>();
   let loaded: ModelBuild | undefined;
   let f16: Promise<boolean> | undefined;
+  /** Downloads by family, each with the clients following its progress. */
+  type Progress = (text: string, fraction: number) => void;
+  const downloads = new Map<string, { result: Promise<null>; followers: Set<Progress> }>();
 
   const hasF16 = () => {
     f16 ??= engine.hasF16().catch((error: unknown) => {
@@ -33,11 +36,49 @@ export function createHost(engine: Engine, onBusyChange: (busy: boolean) => void
   };
   const buildFor = async (id: string) => pickBuild(familyOf(id), await hasF16());
 
-  async function load(build: ModelBuild, send: Send, id: number): Promise<void> {
+  async function load(build: ModelBuild, progress: Progress): Promise<void> {
     if (loaded?.id === build.id) return;
     loaded = undefined;
-    await engine.load(build, (text, fraction) => send({ id, kind: "progress", text, fraction }));
+    await engine.load(build, progress);
     loaded = build;
+  }
+
+  /**
+   * Starts a family's download, or joins the one under way. Cancelling only
+   * stops following it: the user asked for the download, and a page closing
+   * (or WebLLM, which can't stop a load part-way) shouldn't waste it.
+   */
+  function download(family: string, send: Send, id: number): Ticket<null> {
+    let entry = downloads.get(family);
+    if (!entry) {
+      const followers = new Set<Progress>();
+      const result = scheduler.add({
+        priority: "user",
+        run: async () => {
+          await load(await buildFor(family), (text, fraction) => {
+            for (const follow of followers) follow(text, fraction);
+          });
+          return null;
+        },
+      }).result;
+      entry = { result, followers };
+      downloads.set(family, entry);
+      void result.then(
+        () => downloads.delete(family),
+        () => downloads.delete(family),
+      );
+    }
+    const follow: Progress = (text, fraction) => send({ id, kind: "progress", text, fraction });
+    const { followers } = entry;
+    followers.add(follow);
+    let stopped!: () => void;
+    const cancelled = new Promise<never>((_, reject) => {
+      stopped = () => reject(new CancelledError());
+    });
+    return {
+      result: Promise.race([entry.result, cancelled]).finally(() => followers.delete(follow)),
+      cancel: stopped,
+    };
   }
 
   function job(request: HostRequest, send: Send, id: number): Ticket<unknown> {
@@ -50,20 +91,15 @@ export function createHost(engine: Engine, onBusyChange: (busy: boolean) => void
           return Promise.all(
             FAMILIES.map(async (family): Promise<ModelStatus> => {
               const build = pickBuild(family, f16);
-              return { family: family.id, build: build.id, downloaded: await engine.isCached(build) };
+              const downloaded = await engine.isCached(build);
+              return { family: family.id, build: build.id, downloaded, downloading: downloads.has(family.id) };
             }),
           );
         })();
         return { result, cancel() {} };
       }
       case "download":
-        return scheduler.add({
-          priority: "user",
-          run: async () => {
-            await load(await buildFor(request.family), send, id);
-            return null;
-          },
-        });
+        return download(request.family, send, id);
       case "delete":
         return scheduler.add({
           priority: "user",
@@ -88,7 +124,7 @@ export function createHost(engine: Engine, onBusyChange: (busy: boolean) => void
               // Translation never downloads; the user agrees to that on the settings page.
               if (!(await engine.isCached(build)))
                 throw new HostError("not-downloaded", `${familyOf(family).label} isn't downloaded yet`);
-              await load(build, send, id);
+              await load(build, (text, fraction) => send({ id, kind: "progress", text, fraction }));
             }
             // Cancelled or preempted while the model loaded: don't start the reply.
             if (signal.aborted) return { finishReason: "abort" };

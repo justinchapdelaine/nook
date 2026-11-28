@@ -1,13 +1,13 @@
 // Offscreen document: the home of the engine worker. It relays client ports
 // to the worker and closes itself, through the service worker, once nothing
-// has needed the model for the idle time in its URL (?idleMinutes=10), which
-// frees GPU memory. It reopens on the next request and reloads from cache.
+// has needed the model for the idle time (from its URL, ?idleMinutes=10, or
+// as changed since on the settings page), which frees GPU memory. It reopens on the next request and reloads from cache.
 
 import type { OffscreenMessage } from "../../core/runtime/protocol";
 import { HOST_PORT } from "../../core/runtime/protocol";
 import type { WorkerIn, WorkerOut } from "../../core/runtime/worker";
 
-const idleMs = Number(new URLSearchParams(location.search).get("idleMinutes") ?? 10) * 60_000;
+let idleMs = Number(new URLSearchParams(location.search).get("idleMinutes") ?? 10) * 60_000;
 
 const worker = new Worker(new URL("../../core/runtime/worker.ts", import.meta.url), { type: "module" });
 const ports = new Map<number, chrome.runtime.Port>();
@@ -55,6 +55,13 @@ chrome.runtime.onConnect.addListener((port) => {
     checkIdle();
   });
   port.onMessage.addListener((message) => worker.postMessage({ portId, message } satisfies WorkerIn));
+});
+
+chrome.runtime.onMessage.addListener((message: OffscreenMessage) => {
+  if (message?.type !== "offscreen:idle-minutes") return false;
+  idleMs = message.minutes * 60_000;
+  checkIdle();
+  return false;
 });
 
 checkIdle();

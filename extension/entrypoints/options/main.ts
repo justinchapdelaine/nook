@@ -4,7 +4,7 @@ import type { ModelFamily } from "../../core/models";
 import { FAMILIES, findFamily } from "../../core/models";
 import { TABS_PERMISSION } from "../../core/permissions";
 import { HostClient, HostRequestError } from "../../core/runtime/client";
-import type { ModelStatus } from "../../core/runtime/protocol";
+import type { ModelStatus, OffscreenMessage } from "../../core/runtime/protocol";
 import { getSettings, updateSettings } from "../../core/settings";
 import { languageLabel, TARGET_LANGUAGES } from "../../features/translate/languages";
 
@@ -82,6 +82,10 @@ async function showModels(): Promise<void> {
   $<HTMLSelectElement>("#idle-minutes").addEventListener("change", (event) => {
     const idleMinutes = Number((event.target as HTMLSelectElement).value);
     updateSettings({ idleMinutes }).catch(logError("saving the idle time"));
+    // An open model host learns the new time now; a closed one reads it when it opens.
+    chrome.runtime
+      .sendMessage({ type: "offscreen:idle-minutes", minutes: idleMinutes } satisfies OffscreenMessage)
+      .catch(() => {});
   });
   await refreshModel();
 }
@@ -105,7 +109,10 @@ async function refreshModel(): Promise<void> {
     const detail = document.querySelector(`.detail[data-family="${CSS.escape(status.family)}"]`);
     if (detail) detail.textContent = status.downloaded ? " Downloaded." : "";
   }
-  const downloaded = statuses.find((s) => s.family === family.id)?.downloaded ?? false;
+  const status = statuses.find((s) => s.family === family.id);
+  // A download started before this page opened keeps going; show its progress again.
+  if (status?.downloading) return void downloadModel(family.id);
+  const downloaded = status?.downloaded ?? false;
   modelStatus.textContent = downloaded
     ? `${family.label} is downloaded and ready.`
     : `${family.label} isn't downloaded yet. Translation needs it.`;
@@ -132,8 +139,9 @@ async function run(what: string, work: () => Promise<unknown>): Promise<void> {
   await refreshModel();
 }
 
-downloadButton.addEventListener("click", async () => {
-  const family = (await getSettings()).model;
+/** Starts the family's download, or follows the one already under way, showing its progress. */
+async function downloadModel(family: string): Promise<void> {
+  downloadButton.hidden = deleteButton.hidden = true;
   progress.value = 0;
   progress.hidden = false;
   modelStatus.textContent = "Downloading…";
@@ -145,12 +153,16 @@ downloadButton.addEventListener("click", async () => {
         {
           onProgress: (text, fraction) => {
             progress.value = fraction;
-            modelStatus.textContent = `Downloading: ${Math.round(fraction * 100)}%`;
+            modelStatus.textContent = `Downloading: ${Math.round(fraction * 100)}%. It keeps going if you close this page.`;
             progress.title = text;
           },
         },
       ).result,
   );
+}
+
+downloadButton.addEventListener("click", async () => {
+  await downloadModel((await getSettings()).model);
 });
 
 deleteButton.addEventListener("click", async () => {

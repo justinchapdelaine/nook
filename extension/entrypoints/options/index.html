@@ -51,7 +51,7 @@
           <legend>Model</legend>
         </fieldset>
         <p id="model-status" role="status"></p>
-        <progress id="download-progress" max="1" value="0" hidden></progress>
+        <progress id="download-progress" max="1" value="0" aria-label="Download progress" hidden></progress>
         <div class="actions">
           <button type="button" id="download" hidden></button>
           <button type="button" id="delete" hidden></button>
@@ -66,10 +66,7 @@
             <option value="60">1 hour unused</option>
           </select>
         </label>
-        <p class="note">
-          The model loads again in a second or two the next time you translate. A new time applies from the next
-          time the model loads.
-        </p>
+        <p class="note">The model loads again in a second or two the next time you translate.</p>
       </section>
 
       <section aria-labelledby="tabs-heading">

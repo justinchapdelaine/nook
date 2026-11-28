@@ -32,12 +32,17 @@ export interface ModelStatus {
   /** The build this GPU would load. */
   build: string;
   downloaded: boolean;
+  /** A download of this family is queued or running, perhaps for a settings page that has since closed. */
+  downloading: boolean;
 }
 
 export type HostRequest =
   /** Download state of every model family, for this GPU. */
   | { type: "models" }
-  /** Downloads (if needed) and loads a family. Only the settings page sends this, after the user agreed. */
+  /**
+   * Downloads (if needed) and loads a family. Only the settings page sends this, after the user agreed.
+   * A download keeps going when its page closes; asking again for the same family follows it.
+   */
   | { type: "download"; family: string }
   /** Removes every build of a family from the cache, unloading it first if loaded. */
   | { type: "delete"; family: string }
@@ -81,6 +86,8 @@ export type OffscreenMessage =
   /** From the offscreen document: it is ready for ports. */
   | { type: "offscreen:ready" }
   /** From the offscreen document: it has been idle long enough to close. Answered only if closing failed. */
-  | { type: "offscreen:idle" };
+  | { type: "offscreen:idle" }
+  /** From the settings page: the idle time changed, so an open document uses it at once. */
+  | { type: "offscreen:idle-minutes"; minutes: number };
 
 export type EnsureResult = { ok: true } | { ok: false; error: string };

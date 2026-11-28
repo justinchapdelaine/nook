@@ -104,6 +104,29 @@ describe("host", () => {
     await reply.done;
   });
 
+  it("keeps a download going when its port closes, and lets another client follow it", async () => {
+    const engine = fakeEngine();
+    let finish!: () => void;
+    engine.load = async (build, onProgress) => {
+      engine.loads.push(build.id);
+      onProgress("half", 0.5);
+      await new Promise<void>((resolve) => {
+        finish = resolve;
+      });
+    };
+    const host = createHost(engine, () => {});
+    const first = call(host, 1, 1, { id: 1, request: { type: "download", family: "Qwen3.5-2B" } });
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    host.disconnected(1);
+    expect((await first.done).at(-1)).toMatchObject({ kind: "error", code: "cancelled" });
+    const status = await call(host, 2, 1, { id: 1, request: { type: "models" } }).done;
+    expect(status.at(-1)).toMatchObject({ result: [{ family: "Qwen3.5-2B", downloading: true }, {}] });
+    const second = call(host, 2, 2, { id: 2, request: { type: "download", family: "Qwen3.5-2B" } });
+    finish();
+    expect((await second.done).at(-1)).toMatchObject({ kind: "result" });
+    expect(engine.loads).toEqual(["Qwen3.5-2B-q4f16_1-MLC"]);
+  });
+
   it("cancels a closed port's work", async () => {
     const host = createHost(fakeEngine(), () => {});
     await call(host, 1, 1, { id: 1, request: { type: "download", family: "Qwen3.5-2B" } }).done;
