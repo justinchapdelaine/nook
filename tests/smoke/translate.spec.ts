@@ -1,7 +1,7 @@
 // End to end with the real model: the settings page downloads Qwen3.5 0.8B
 // (the q4f32 build, since the cloud's software GPU has no shader-f16), a
 // selection is translated, and a reply is cancelled part-way. It skips itself
-// when the weights can't be downloaded.
+// when the browser has no WebGPU adapter or the weights can't be downloaded.
 import type { Page, Worker } from "@playwright/test";
 import { expect, smokeTest as test } from "../e2e/fixtures";
 import { bubble, settings, translateOn } from "../e2e/translate-helpers";
@@ -29,6 +29,10 @@ test("the real model downloads, translates a selection and stops when cancelled"
     () => false,
   );
   test.skip(!reachable, "The model weights can't be downloaded from here");
+  // A machine with no GPU at all (such as a Hyper-V VM) has no adapter, and the settings page offers no download.
+  await page.goto(`chrome-extension://${extensionId}/options.html`);
+  const hasAdapter = await page.evaluate(async () => (await navigator.gpu?.requestAdapter()) != null);
+  test.skip(!hasAdapter, "This browser has no WebGPU adapter");
 
   await settings(serviceWorker as Worker, { targetLanguage: "en", model: "Qwen3.5-0.8B" });
   await downloadLightModel(page, extensionId);
