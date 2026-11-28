@@ -1,16 +1,13 @@
 // Translate selection: reads the selected text, works out its language, and
 // streams its translation into a bubble under it.
 import type { OpenSetupMessage } from "../../core/messages";
-import type { HostClient } from "../../core/runtime/client";
-import { HostRequestError } from "../../core/runtime/client";
 import { getSettings } from "../../core/settings";
-import { MAX_INPUT_CHARS, translate } from "../../core/tasks/translate";
+import { MAX_INPUT_CHARS, TranslateError, translate } from "../../core/tasks/translate";
 import type { BubbleView } from "./bubble";
 import { openBubble } from "./bubble";
 import { detectLanguage, sameLanguage } from "./language";
 
-const names = new Intl.DisplayNames([navigator.language], { type: "language" });
-const nameOf = (code: string) => names.of(code) ?? code;
+import { languageLabel } from "./languages";
 
 let current: BubbleView | undefined;
 
@@ -23,7 +20,7 @@ function fieldSelection(): string {
   return start !== null && end !== null ? field.value.slice(start, end) : "";
 }
 
-export async function translateSelection(client: HostClient, fallbackText = ""): Promise<void> {
+export async function translateSelection(fallbackText = ""): Promise<void> {
   current?.close();
   const selection = getSelection();
   const range = selection && selection.rangeCount > 0 ? selection.getRangeAt(0) : undefined;
@@ -47,25 +44,25 @@ export async function translateSelection(client: HostClient, fallbackText = ""):
   }
 
   bubble.setStatus("Translating…", true);
-  const settings = await getSettings();
   const container = range?.commonAncestorContainer;
   const near = container instanceof Element ? container : (container?.parentElement ?? null);
-  const from = await detectLanguage(text, near);
+  const [settings, from] = await Promise.all([getSettings(), detectLanguage(text, near)]);
   const to = settings.targetLanguage;
   // Closed while the settings or the language were read: there is nothing to translate for.
   if (closed) return;
-  if (from && sameLanguage(from, to)) return bubble.setStatus(`This is already in ${nameOf(to)}.`);
+  if (from && sameLanguage(from, to)) return bubble.setStatus(`This is already in ${languageLabel(to)}.`);
 
-  const fromLabel = from ? `from ${nameOf(from)}` : "";
-  bubble.setStatus(from ? `Translating ${fromLabel}…` : "Translating…", true);
-  const job = translate(client, text, {
+  const fromLabel = from ? ` from ${languageLabel(from)}` : "";
+  const working = `Translating${fromLabel}…`;
+  bubble.setStatus(working, true);
+  const job = translate(text, {
     family: settings.model,
     priority: "user",
     from,
     to,
     onLoading: (fraction) => bubble.setStatus(`Loading the model… ${Math.round(fraction * 100)}%`, true),
     onText: (sofar) => {
-      if (sofar) bubble.setStatus(from ? `Translating ${fromLabel}…` : "Translating…", true);
+      if (sofar) bubble.setStatus(working, true);
       bubble.setText(sofar, to);
     },
   });
@@ -73,27 +70,23 @@ export async function translateSelection(client: HostClient, fallbackText = ""):
   try {
     const { text: translation, cut } = await job.result;
     bubble.setText(translation, to);
-    const done = from ? `Translated ${fromLabel}` : "Translated";
+    const done = `Translated${fromLabel}`;
     const note = {
       repetition: " (stopped early: the reply began repeating itself)",
       length: " (stopped at the length limit)",
     };
     bubble.setStatus(cut ? `${done}${note[cut]}` : done);
   } catch (error) {
-    if (!(error instanceof HostRequestError)) {
-      bubble.setStatus(`Translation failed: ${String(error)}`);
-      return;
-    }
-    if (error.code === "cancelled") return;
-    if (error.code === "not-downloaded") {
+    const reason = error instanceof TranslateError ? error.reason : undefined;
+    if (reason === "cancelled") return;
+    if (reason === "not-downloaded") {
       bubble.setStatus("Nook needs to download its translation model first. Opening settings…");
       await chrome.runtime.sendMessage({ type: "setup:open" } satisfies OpenSetupMessage);
       return;
     }
-    if (error.code === "no-webgpu") {
-      bubble.setStatus("Translation needs WebGPU, which this browser or GPU doesn't offer.");
-      return;
+    if (reason === "no-webgpu") {
+      return bubble.setStatus("Translation needs WebGPU, which this browser or GPU doesn't offer.");
     }
-    bubble.setStatus(`Translation failed: ${error.message}`);
+    bubble.setStatus(`Translation failed: ${error instanceof Error ? error.message : String(error)}`);
   }
 }

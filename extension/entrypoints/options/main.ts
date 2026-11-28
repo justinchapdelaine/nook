@@ -6,7 +6,7 @@ import { TABS_PERMISSION } from "../../core/permissions";
 import { HostClient, HostRequestError } from "../../core/runtime/client";
 import type { ModelStatus } from "../../core/runtime/protocol";
 import { getSettings, updateSettings } from "../../core/settings";
-import { TARGET_LANGUAGES } from "../../features/translate/languages";
+import { languageLabel, TARGET_LANGUAGES } from "../../features/translate/languages";
 
 const $ = <T extends Element>(selector: string) => document.querySelector(selector) as T;
 const logError = (what: string) => (error: unknown) => console.error(`Nook: ${what} failed`, error);
@@ -19,12 +19,11 @@ const sizeOf = (family: ModelFamily) => `${(family.downloadMB / 1000).toFixed(1)
 async function showTranslation(): Promise<void> {
   const settings = await getSettings();
   const select = $<HTMLSelectElement>("#target-language");
-  const names = new Intl.DisplayNames([navigator.language], { type: "language" });
   const codes: string[] = [...TARGET_LANGUAGES];
   // Keep a language set before this list changed, so the page shows the truth.
   if (!codes.includes(settings.targetLanguage)) codes.unshift(settings.targetLanguage);
   select.replaceChildren(
-    ...codes.map((code) => new Option(names.of(code) ?? code, code, false, code === settings.targetLanguage)),
+    ...codes.map((code) => new Option(languageLabel(code), code, false, code === settings.targetLanguage)),
   );
   select.addEventListener("change", () => {
     updateSettings({ targetLanguage: select.value }).catch(logError("saving the language"));

@@ -19,3 +19,8 @@ export const TARGET_LANGUAGES = [
   "zh",
   "ko",
 ] as const;
+
+const names = new Intl.DisplayNames([navigator.language], { type: "language" });
+
+/** A language's name in the browser's language, or its code when the browser has no name for it. */
+export const languageLabel = (code: string): string => names.of(code) ?? code;

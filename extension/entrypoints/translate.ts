@@ -3,7 +3,6 @@
 // not declared for all pages. Injecting it again reuses a live copy.
 import { defineUnlistedScript } from "wxt/utils/define-unlisted-script";
 import type { TranslateSelectionMessage } from "../core/messages";
-import { HostClient } from "../core/runtime/client";
 import { translateSelection } from "../features/translate/selection";
 
 declare global {
@@ -22,10 +21,9 @@ export default defineUnlistedScript(() => {
       // The old runtime is gone; fall through and install a fresh listener.
     }
   }
-  const client = new HostClient();
   const listener = (message: TranslateSelectionMessage): boolean => {
     if (message?.type !== "translate:selection") return false;
-    translateSelection(client, message.selectionText).catch((error: unknown) =>
+    translateSelection(message.selectionText).catch((error: unknown) =>
       console.error("Nook: translating the selection failed", error),
     );
     return false;

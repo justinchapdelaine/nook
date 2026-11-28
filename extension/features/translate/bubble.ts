@@ -2,7 +2,7 @@
 // the translation as it streams in. It lives in a closed shadow root, so the
 // page's styles can't reach it and page scripts can't read it, and in the
 // top layer (a popover), so it sits above the page whatever its z-indexes.
-// All text goes in through textContent: model output is never parsed as HTML.
+// All text goes into text nodes: model output is never parsed as HTML.
 
 const STYLE = `
 .bubble {
@@ -161,13 +161,17 @@ export function openBubble(anchor: DOMRect, onClose: () => void): BubbleView {
   resize = new ResizeObserver(place);
   resize.observe(bubble);
 
+  // A streamed reply calls these once per token, so leave the DOM alone when nothing
+  // changed, and append to the text when it only grew.
+  const body = text.appendChild(document.createTextNode(""));
   return {
     setStatus(value, working = false) {
-      status.textContent = value;
+      if (status.textContent !== value) status.textContent = value;
       status.classList.toggle("working", working);
     },
     setText(value, lang) {
-      text.textContent = value;
+      if (value.startsWith(body.data)) body.appendData(value.slice(body.data.length));
+      else body.data = value;
       if (lang) text.lang = lang;
     },
     close,
