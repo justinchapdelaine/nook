@@ -84,6 +84,7 @@ Each phase ends with a PR and is done when the listed things are true. The order
 - Rules run first; one LLM request places the remaining tabs and names every group, using WebLLM's JSON schema output. Tabs are referred to by short indexes.
 - The result is validated (every tab once, known indexes, non-empty names); on failure it retries once, then falls back to the rule groups.
 - Done when a 20 to 50 tab window groups reliably, with undo, within the shared context window. If 50 tabs don't fit in 8K, the config value goes up for every task.
+- **Built in phase 3.** Each new site group from the rules is one numbered line, so a site's tabs stay together; existing groups are named in the prompt and can be added to. Group colours come from the name, not the model. Two refinements to the check above: a tab the model leaves out is not a failure (it keeps its site group, or stays put), while a tab in two groups is; and the retry runs at temperature 0.7, since a second try at 0 would give the same reply. 50 tabs fit easily: about 25 tokens a line, and at most 100 lines per request. The cloud smoke test now adds a grouping step, which, like the replies before it, needs a hardware GPU.
 
 ### 4. Full-page translation, plain text
 

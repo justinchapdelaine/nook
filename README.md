@@ -12,7 +12,7 @@ Nook targets [Helium](https://helium.computer/) first and aims to work in other 
 
 ## Status
 
-Discovery and [Nook Bench](bench/README.md), the harness that measured on-device model hosting, speed and translation quality, are done. The extension is being built in the phases of [docs/plan.md](docs/plan.md). It now has its tab tools, which need no model (group tabs by site, close duplicate tabs, undo the last change), and Translate selection, which downloads a model once from the settings page.
+Discovery and [Nook Bench](bench/README.md), the harness that measured on-device model hosting, speed and translation quality, are done. The extension is being built in the phases of [docs/plan.md](docs/plan.md). It now has its tab tools (group tabs, close duplicate tabs, undo the last change), which work with no model, and Translate selection, which downloads a model once from the settings page. With the model downloaded, Group tabs sorts tabs by topic and names the groups; without it, it groups by site.
 
 ```sh
 npm run build      # fetch the packaged model libraries, then build Nook to extension/.output/chrome-mv3 (load it unpacked)
