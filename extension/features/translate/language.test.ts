@@ -18,6 +18,11 @@ describe("chooseLanguage", () => {
     expect(chooseLanguage(undefined, "ja")).toBe("ja");
   });
 
+  it("ignores a lang attribute that isn't a language tag", () => {
+    expect(chooseLanguage(undefined, "{{ locale }}")).toBeUndefined();
+    expect(chooseLanguage(undefined, "en US")).toBeUndefined();
+  });
+
   it("is unknown with neither", () => {
     expect(chooseLanguage({ isReliable: false, languages: [] }, " ")).toBeUndefined();
   });

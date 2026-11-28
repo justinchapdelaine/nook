@@ -21,7 +21,14 @@ export function chooseLanguage(
   const top = detection?.languages[0]?.language;
   if (detection?.isReliable && top && top !== "und") return primaryLanguage(top);
   const attribute = langAttribute?.trim();
-  return attribute ? primaryLanguage(attribute) : undefined;
+  if (!attribute) return undefined;
+  // Pages put anything in lang, such as "en US" or an unfilled "{{ locale }}"; only a real tag counts.
+  try {
+    const [tag] = Intl.getCanonicalLocales(attribute);
+    return tag ? primaryLanguage(tag) : undefined;
+  } catch {
+    return undefined;
+  }
 }
 
 export async function detectLanguage(text: string, near: Element | null): Promise<string | undefined> {

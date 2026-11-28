@@ -89,7 +89,7 @@ export function translate(text: string, options: TranslateOptions): PendingReque
       onDelta: (delta) => {
         if (repeatedAt >= 0) return;
         sofar += delta;
-        repeatedAt = findRepetition(sofar);
+        repeatedAt = findRepetition(sofar, text);
         if (repeatedAt >= 0) {
           sofar = sofar.slice(0, repeatedAt);
           request.cancel();

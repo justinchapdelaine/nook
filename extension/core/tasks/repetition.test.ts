@@ -22,6 +22,12 @@ describe("findRepetition", () => {
     expect(findRepetition("la ".repeat(20))).toBe(3);
   });
 
+  it("leaves a run that the source has too", () => {
+    const leader = `Introduction ${".".repeat(44)}`;
+    expect(findRepetition(leader, `Einleitung ${".".repeat(44)} 3`)).toBe(-1);
+    expect(findRepetition(leader)).toBe(14);
+  });
+
   it("leaves ordinary text and short repeats alone", () => {
     expect(findRepetition("Ha ha ha, that was funny... Very, very good.")).toBe(-1);
     expect(findRepetition("Bonjour le monde")).toBe(-1);
