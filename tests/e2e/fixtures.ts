@@ -32,7 +32,8 @@ const PAGES: Record<string, string> = {
 /**
  * A Playwright test that loads one built extension in headless Chromium.
  * Every host name resolves to a local web server, so tests can open tabs on
- * any site (`https` is not served, so use `http://` URLs).
+ * any site (`https` is not served, so use `http://` URLs). With network on,
+ * only example.com and names ending in .test do.
  */
 function extensionTest(outputDir: string, { network = false } = {}) {
   const extension = join(ROOT, outputDir);
@@ -59,12 +60,14 @@ function extensionTest(outputDir: string, { network = false } = {}) {
           `--disable-extensions-except=${extension}`,
           `--load-extension=${extension}`,
           "--enable-unsafe-webgpu",
-          // With network on, only example.com goes to the local server and the rest to the internet.
-          `--host-resolver-rules=MAP ${network ? "example.com" : "*"} 127.0.0.1:${sitePort}`,
+          // With network on, only example.com and *.test go to the local server and the rest to the internet.
+          `--host-resolver-rules=${network ? `MAP example.com 127.0.0.1:${sitePort}, MAP *.test 127.0.0.1:${sitePort}` : `MAP * 127.0.0.1:${sitePort}`}`,
         ],
         // The cloud test environment reaches the internet through a proxy.
         proxy:
-          network && process.env.HTTPS_PROXY ? { server: process.env.HTTPS_PROXY, bypass: "example.com" } : undefined,
+          network && process.env.HTTPS_PROXY
+            ? { server: process.env.HTTPS_PROXY, bypass: "example.com, *.test" }
+            : undefined,
       });
       await use(context);
       await context.close();

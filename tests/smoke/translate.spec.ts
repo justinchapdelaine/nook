@@ -1,9 +1,11 @@
 // End to end with the real model: the settings page downloads Qwen3.5 0.8B
 // (the q4f32 build, since the cloud's software GPU has no shader-f16), a
-// selection is translated, and a reply is cancelled part-way. It skips itself
+// selection is translated, a reply is cancelled part-way, and a few tabs are
+// grouped by topic with the reply held to a JSON schema. It skips itself
 // when the browser has no WebGPU adapter or the weights can't be downloaded.
 import type { Page, Worker } from "@playwright/test";
 import { expect, smokeTest as test } from "../e2e/fixtures";
+import { openTabs, run, windowTabs } from "../e2e/tab-helpers";
 import { bubble, settings, translateOn } from "../e2e/translate-helpers";
 
 const WEIGHTS = "https://huggingface.co/mlc-ai/Qwen3.5-0.8B-q4f32_1-MLC/resolve/main/mlc-chat-config.json";
@@ -19,7 +21,7 @@ async function downloadLightModel(page: Page, extensionId: string) {
 
 const finished = async (page: Page) => (await bubble(page))?.status ?? "";
 
-test("the real model downloads, translates a selection and stops when cancelled", async ({
+test("the real model downloads, translates a selection, stops when cancelled and groups tabs", async ({
   page,
   extensionId,
   serviceWorker,
@@ -63,4 +65,19 @@ test("the real model downloads, translates a selection and stops when cancelled"
   await translateOn(page, serviceWorker, "/french", "Bonjour.");
   await expect.poll(() => finished(page), { timeout: 10 * 60_000, intervals: [2_000] }).toMatch(/^Translated/);
   console.log(`Short reply after a cancel took ${((Date.now() - start) / 1000).toFixed(1)} s`);
+
+  // Grouping by topic: one request with JSON output, checked, then applied.
+  await page.goto(`chrome-extension://${extensionId}/options.html`);
+  await openTabs(page, [
+    ["http://food.test/soup", "Easy weeknight lentil soup recipe"],
+    ["http://bake.test/bread", "Sourdough starter troubleshooting guide"],
+    ["http://trip.test/lisbon", "Lisbon in 3 days: an itinerary"],
+    ["http://hotel.test/alfama", "Hotel Alfama, Lisbon - book direct"],
+    ["http://code.test/pr", "Pull request #42: fix tab restore"],
+    ["http://answers.test/debounce", "How do I debounce a function in TypeScript?"],
+  ]);
+  const grouped = await run(page, "group-tabs");
+  console.log(`Grouping: ${JSON.stringify(await windowTabs(page))}`);
+  expect(grouped).toMatchObject({ action: "group-tabs", by: "topic" });
+  expect(grouped.count).toBeGreaterThan(0);
 });
