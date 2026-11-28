@@ -76,7 +76,7 @@ Each phase ends with a PR and is done when the listed things are true. The order
 - **Translate selection** from the page context menu and a shortcut. The result streams into a small bubble in a closed shadow root, isolated from page styles. The text goes in as text nodes only.
 - **Language detection**: `chrome.i18n.detectLanguage` on a sample of the text first, since many sites mark every page `lang="en"` whatever it says. The page's `lang` attribute is the fallback when detection isn't reliable, and otherwise the language is unknown. Detection runs when the user picks a menu item or shortcut, because that gesture is what grants access to the page. Menu labels therefore stay fixed (*Translate selection*, *Translate page*); if the page is already in the target language, Nook says so in the corner indicator instead of translating.
 - A repetition guard stops a reply that repeats itself, and the token limit is sized to the input. Both answer the E3 loops.
-- Quality checked by hand on real pages in the languages the owner reads.
+- Quality checked by hand on real pages. Done on a French Wikipedia passage: 2B was accurate apart from one slip, while 0.8B reversed a fact and left words untranslated, which supports shipping it only with the warning. Other languages wait for readers of them.
 
 ### 3. AI tab grouping
 
