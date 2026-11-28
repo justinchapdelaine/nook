@@ -41,3 +41,47 @@ button {
   min-block-size: 24px;
   min-inline-size: 24px;
 }
+
+section + section {
+  margin-block-start: 2rem;
+}
+
+.note {
+  font-size: 0.9em;
+  color: color-mix(in srgb, CanvasText 70%, Canvas);
+}
+
+.field {
+  display: grid;
+  gap: 0.25rem;
+  margin-block: 0.75rem;
+  max-inline-size: 28rem;
+}
+
+select,
+textarea {
+  font: inherit;
+}
+
+fieldset {
+  display: grid;
+  gap: 0.5rem;
+  border: 1px solid color-mix(in srgb, CanvasText 25%, Canvas);
+  border-radius: 6px;
+}
+
+.choice {
+  display: flex;
+  gap: 0.5rem;
+  align-items: baseline;
+}
+
+progress {
+  inline-size: 100%;
+  max-inline-size: 28rem;
+}
+
+.actions {
+  display: flex;
+  gap: 0.5rem;
+}

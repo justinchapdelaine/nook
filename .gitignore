@@ -15,6 +15,7 @@ dist/
 
 # Model libraries fetched at build time (see scripts/fetch-model-libs.ts)
 bench/public/model-libs/
+extension/public/model-libs/
 
 # Test output: Vitest coverage and browser-mode screenshots, Playwright reports
 coverage/

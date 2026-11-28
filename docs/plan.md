@@ -7,7 +7,7 @@
 - Qwen3.5-2B runs through WebLLM in Helium at about 93 tokens per second, or 4.3 s per screen of article text. It is the default model.
 - The engine lives in a dedicated worker inside an offscreen document. It survives idle time and service worker restarts, and reloads from cache in about 1 s.
 - Every Helium API Nook needs works, except `chrome.tabs.detectLanguage`, which never answers. Nook detects page language itself.
-- Open: how inline formatting survives translation, quality in the weaker languages, and whether 0.8B is worth offering. See [Open decisions](#open-decisions).
+- Open: how inline formatting survives translation and quality in the weaker languages. 0.8B ships as the light option (decided in phase 2). See [Open decisions](#open-decisions).
 
 ## Repo organization
 
@@ -66,7 +66,7 @@ Each phase ends with a PR and is done when the listed things are true. The order
 ### 2. Model setup and selection translation
 
 - The model list moves to `models/models.json` and the bench reads it from there.
-- The offscreen host, engine worker, runtime and scheduler exist, with the bench's lessons built in: wait for the offscreen ready message, never disconnect a port meant for another context, a heartbeat every 5 s per open request with a 60 s timeout, and checking `runtime.getContexts` before reusing a port.
+- The offscreen host, engine worker, runtime and scheduler exist, with the bench's lessons built in: wait for the offscreen ready message, a heartbeat every 5 s per open request with a 60 s timeout, and only the offscreen document listening for host ports, so a closed host always disconnects its clients (this replaces the bench's `runtime.getContexts` check before reusing a port, which content scripts can't make).
 - The model loads once with one context window for every task, 8K to start (a config value). Changing the window means reloading the model, so it is not set per task; E4 showed 8K costs about 0.1 GB more than 4K.
 - The runtime picks the `q4f16` build when the GPU has `shader-f16` and the `q4f32` build otherwise.
 - The offscreen document closes after 10 minutes idle (a setting) and reopens on demand.
@@ -76,7 +76,7 @@ Each phase ends with a PR and is done when the listed things are true. The order
 - **Translate selection** from the page context menu and a shortcut. The result streams into a small bubble in a closed shadow root, isolated from page styles. The text goes in as text nodes only.
 - **Language detection**: `chrome.i18n.detectLanguage` on a sample of the text first, since many sites mark every page `lang="en"` whatever it says. The page's `lang` attribute is the fallback when detection isn't reliable, and otherwise the language is unknown. Detection runs when the user picks a menu item or shortcut, because that gesture is what grants access to the page. Menu labels therefore stay fixed (*Translate selection*, *Translate page*); if the page is already in the target language, Nook says so in the corner indicator instead of translating.
 - A repetition guard stops a reply that repeats itself, and the token limit is sized to the input. Both answer the E3 loops.
-- Quality checked by hand on real pages in the languages the owner reads.
+- Quality checked by hand on real pages. Done on a French Wikipedia passage: 2B was accurate apart from one slip, while 0.8B reversed a fact and left words untranslated, which supports shipping it only with the warning. Other languages wait for readers of them.
 
 ### 3. AI tab grouping
 
@@ -92,6 +92,7 @@ Each phase ends with a PR and is done when the listed things are true. The order
 - Progress: blocks being translated pulse gently, then cross-fade; reduced motion gets a static dim. A small corner indicator shows progress and offers cancel.
 - **Show original** swaps the original text back into the original nodes, instantly. A `MutationObserver` picks up blocks a page adds or re-renders.
 - In this phase every block is translated as plain text: a block with inline formatting keeps its nodes, but their text is emptied and the translation goes into one new text node placed directly in the block, outside any bold, italic or link wrapper, so the whole block doesn't turn bold or clickable. Links in such blocks stop working until phase 5. Show original removes the added node and puts the original text back.
+- Translate selection moves to the same splitting: a selection of several paragraphs is sent one paragraph at a time and streamed into the bubble in order. Until then the whole selection goes in one request, and 0.8B often merges its paragraphs.
 - Done when articles, docs and one dynamic site translate and restore cleanly.
 
 ### 5. Inline formatting
@@ -140,10 +141,10 @@ English into Japanese and Chinese scores about 31 chrF, partly because chrF coun
 
 0.8B is weaker in every pair (mean chrF 32.6 against 40.9 out of English) and no faster per screen, because it writes longer output. Its only case is a machine with too little GPU memory for 2B, and the rough readings did not show a clear memory saving. Options: don't ship it; ship it only for tab grouping; or ship it as a light option with a quality warning.
 
-**Needed by:** phase 2, when the options page gets its model choice. Until decided, 0.8B stays in the model list as the light option, as CLAUDE.md records. If the decision drops it, the same PR updates CLAUDE.md, and the package gets about 14 MB smaller.
+**Decided in phase 2:** ship it as the light option, with a note on the settings page that it translates noticeably worse. CLAUDE.md stays as it is. Dropping it later is a change to `models/models.json` and makes the package about 14 MB smaller.
 
 ## Testing
 
 - `npm run check` and `npm test` on every PR, and the Playwright suite against the built extension in headless Chromium 158. Most task tests use a fake runtime that returns scripted replies, which is fast and also covers the fallbacks.
-- **Real-model smoke test in the cloud.** Headless Chromium there has a software WebGPU adapter (SwiftShader) with no `shader-f16`, so it can run the `q4f32` builds but not `q4f16`. A small, separate Playwright suite loads Qwen3.5-0.8B `q4f32` in the offscreen host and runs a handful of short prompts: one sentence translated, a few tabs grouped with JSON output, a cancel mid-reply. It checks that the real model, runtime, prompts and output checks work end to end, not speed or quality. It is slow, so it runs on demand rather than on every PR, and it skips itself when the weights can't be downloaded. The cloud environment allows `huggingface.co` and its download host `us.aws.cdn.hf.co` for this.
+- **Real-model smoke test in the cloud.** Headless Chromium there has a software WebGPU adapter (SwiftShader) with no `shader-f16`, so it can run the `q4f32` builds but not `q4f16`. A small, separate Playwright suite loads Qwen3.5-0.8B `q4f32` in the offscreen host and runs a handful of short prompts: one sentence translated, a few tabs grouped with JSON output, a cancel mid-reply. It checks that the real model, runtime, prompts and output checks work end to end, not speed or quality. It is slow, so it runs on demand (`npm run test:smoke`) rather than on every PR, and it skips itself when the weights can't be downloaded. Phase 2 covers translation and the cancel; grouping joins it in phase 3. **Found in phase 2:** in the cloud the download and load work, but the first reply fails after about 110 s with the GPU device lost ("A valid external Instance reference no longer exists"). Nook Bench's own host fails the same way, with a 1K window and with the GPU watchdog off, so it is SwiftShader, not Nook's code. The suite therefore needs a machine with a real GPU: on a software adapter it checks the download and load, then skips the replies. The cloud environment allows `huggingface.co` and its download host `us.aws.cdn.hf.co` for this.
 - Speed, memory, quality and the `q4f16` builds need a real GPU: a manual run in Helium on the owner's machine, with the steps in the PR, or a bench build for numbers.

@@ -31,4 +31,20 @@ export interface RunTabActionMessage {
   action: TabAction;
 }
 
-export type NookMessage = RunTabActionMessage;
+/**
+ * From the service worker to the translator it just injected into a frame:
+ * translate the frame's selected text. `selectionText` is the browser's copy
+ * of it, from a context menu click, used when the frame's own selection is
+ * gone. No reply.
+ */
+export interface TranslateSelectionMessage {
+  type: "translate:selection";
+  selectionText?: string;
+}
+
+/** From the translator: no model is downloaded, so open the settings page at the download step. No reply. */
+export interface OpenSetupMessage {
+  type: "setup:open";
+}
+
+export type NookMessage = RunTabActionMessage | OpenSetupMessage;

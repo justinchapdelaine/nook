@@ -70,12 +70,13 @@ test("the settings page lists the shortcuts and shows tab access", async ({ cont
   const page = context.pages()[0] as Page;
   await expect(page.locator("#access")).toContainText("can read your tabs");
   await expect(page.locator("#shortcuts dd")).toHaveText([
+    "Translate the selected text",
     "Group tabs by site",
     "Close duplicate tabs",
     "Undo the last tab change",
   ]);
   // Every suggested key was accepted; the browser leaves a key it refuses unset.
-  await expect(page.locator("#shortcuts dt")).toHaveText(["Alt+Shift+G", "Alt+Shift+D", "Alt+Shift+U"]);
+  await expect(page.locator("#shortcuts dt")).toHaveText(["Alt+Shift+L", "Alt+Shift+G", "Alt+Shift+D", "Alt+Shift+U"]);
 });
 
 test("close duplicates keeps one tab per page, and undo brings the others back", async ({ context }) => {
@@ -155,7 +156,8 @@ test("undo brings back a group that closing its duplicate tabs emptied", async (
   }
 
   expect(await run(page, "undo")).toEqual({ action: "undo", count: 2 });
-  expect(await windowTabs(page)).toEqual(before);
+  // A tab reopened by URL reports an empty URL until its navigation commits.
+  await expect.poll(() => windowTabs(page)).toEqual(before);
 });
 
 test("group by site groups by registrable domain, and undo puts every tab back", async ({ context }) => {

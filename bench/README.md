@@ -33,7 +33,7 @@ All generation uses temperature 0 unless the results say otherwise. The q4f16 mo
 ## How it is built
 
 - Both hosts run the same code ([lib/host.ts](lib/host.ts)): one WebLLM engine that serves requests over a runtime port named `host:sw` or `host:offscreen`. The offscreen document relays its port to a dedicated worker, so inference stays off the document's main thread.
-- The model list is [models.json](models.json). Model libraries are not committed: `npm run fetch:libs` downloads them into `public/model-libs/` and checks each against its pinned SHA-256, and the build packages them. Only weights are fetched at run time.
+- The bench loads the models Nook ships, from [models/models.json](../models/models.json), plus its own extras in [models.json](models.json). Model libraries are not committed: `npm run bench:fetch:libs` downloads them into `public/model-libs/` and checks each against its pinned SHA-256, and the build packages them. Only weights are fetched at run time.
 - Fixtures ship in the package: [fixtures/flores.json](fixtures/flores.json) (24 FLORES-200 devtest sentences in 11 languages, CC BY-SA 4.0, made by `scripts/make-flores-fixture.ts`), [fixtures/screens.json](fixtures/screens.json) (article text written for this) and [fixtures/tabs.json](fixtures/tabs.json) (made-up tabs).
 
 Three things learned while building it, worth keeping for the real extension:
@@ -52,4 +52,4 @@ npm run test:e2e     # build Nook and the bench, then load both in headless Chro
 npm run check        # Biome and TypeScript
 ```
 
-The cloud test environment has no GPU (WebGPU there is SwiftShader, without `shader-f16`) and can't reach huggingface.co, so the automated tests cover the package check, the page, the E7 automatic checks and skipping of missing models, but no model ever loads there.
+The cloud test environment has no GPU (WebGPU there is SwiftShader, without `shader-f16`), so the automated bench tests cover the package check, the page, the E7 automatic checks and skipping of missing models, but no model ever loads there.
