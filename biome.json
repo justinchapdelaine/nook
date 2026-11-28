@@ -28,7 +28,7 @@
   },
   "overrides": [
     {
-      "includes": ["extension/**", "!extension/core/runtime/**"],
+      "includes": ["extension/**", "!extension/core/runtime/webllm.ts"],
       "linter": {
         "rules": {
           "style": {
@@ -36,7 +36,7 @@
               "level": "error",
               "options": {
                 "paths": {
-                  "@mlc-ai/web-llm": "Only extension/core/runtime may import WebLLM (see docs/plan.md)."
+                  "@mlc-ai/web-llm": "Only extension/core/runtime/webllm.ts may import WebLLM (see docs/architecture.md)."
                 }
               }
             }
