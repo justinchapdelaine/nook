@@ -1,5 +1,5 @@
 // The real engine: WebLLM, running in the offscreen document's worker. This
-// folder is the only code allowed to import WebLLM (enforced by Biome), so
+// file is the only code allowed to import WebLLM (enforced by Biome), so
 // the runtime can be swapped without touching features.
 import type { AppConfig, ChatOptions } from "@mlc-ai/web-llm";
 import { deleteModelAllInfoInCache, hasModelInCache, MLCEngine } from "@mlc-ai/web-llm";

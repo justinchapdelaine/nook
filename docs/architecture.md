@@ -43,7 +43,7 @@ The inference runtime runs WebLLM in a dedicated worker inside an offscreen docu
 - **Translator** (`extension/entrypoints/translate.ts`): a script the service worker injects into the frame where the user picked *Translate selection*. It is not declared for all pages; the click or shortcut grants `activeTab`, which is what lets it in.
 - **Settings page** (`extension/entrypoints/options/`): translation language, sites where translation is off, the model, its download and deletion, the idle time, tab access and the shortcuts.
 - Messages between contexts are typed in `extension/core/messages.ts` (tab actions, translating a selection, opening the model setup) and `extension/core/runtime/protocol.ts` (the host protocol and the offscreen document's lifecycle).
-- Biome stops any file outside `extension/core/runtime/` from importing WebLLM, so the runtime stays swappable.
+- Biome stops every file except `extension/core/runtime/webllm.ts` from importing WebLLM, so the runtime stays swappable.
 
 ## Translate selection
 
