@@ -45,7 +45,6 @@ export function createHost(engine: Engine, onBusyChange: (busy: boolean) => void
       case "models":
         return scheduler.add({
           priority: "user",
-          preemptible: false,
           run: async () => {
             const f16 = await hasF16();
             return Promise.all(
@@ -59,7 +58,6 @@ export function createHost(engine: Engine, onBusyChange: (busy: boolean) => void
       case "download":
         return scheduler.add({
           priority: "user",
-          preemptible: false,
           run: async () => {
             await load(await buildFor(request.family), send, id);
             return null;
@@ -68,7 +66,6 @@ export function createHost(engine: Engine, onBusyChange: (busy: boolean) => void
       case "delete":
         return scheduler.add({
           priority: "user",
-          preemptible: false,
           run: async () => {
             const family = familyOf(request.family);
             if (loaded && family.builds.some((b) => b.id === loaded?.id)) {
@@ -83,7 +80,6 @@ export function createHost(engine: Engine, onBusyChange: (busy: boolean) => void
         const { family, priority, ...rest } = request.request;
         return scheduler.add({
           priority,
-          preemptible: priority === "background",
           run: async (signal, attempt): Promise<HostResults["generate"]> => {
             if (attempt > 0) send({ id, kind: "restart" });
             const build = await buildFor(family);
@@ -94,18 +90,9 @@ export function createHost(engine: Engine, onBusyChange: (busy: boolean) => void
               await load(build, send, id);
             }
             // Cancelled or preempted while the model loaded: don't start the reply.
-            if (signal.aborted) return { text: "", finishReason: "abort" };
-            let text = "";
+            if (signal.aborted) return { finishReason: "abort" };
             try {
-              const { finishReason } = await engine.generate(
-                rest,
-                (delta) => {
-                  text += delta;
-                  send({ id, kind: "delta", text: delta });
-                },
-                signal,
-              );
-              return { text, finishReason };
+              return await engine.generate(rest, (text) => send({ id, kind: "delta", text }), signal);
             } catch (error) {
               // A failed reply (for example a lost GPU device) can leave the engine without
               // its pipeline, so load the model again next time rather than trust it.

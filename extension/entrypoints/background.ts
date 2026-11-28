@@ -172,8 +172,12 @@ export default defineBackground({
         return true;
       }
       if (message?.type === "offscreen:idle") {
-        closeOffscreen().catch((error: unknown) => console.error("Nook: closing the model host failed", error));
-        return false;
+        // A successful close ends the document, so only a failure is ever answered.
+        closeOffscreen().catch((error: unknown) => {
+          console.error("Nook: closing the model host failed", error);
+          sendResponse({ ok: false, error: String(error) } satisfies EnsureResult);
+        });
+        return true;
       }
       if (message?.type === "setup:open") {
         openSetup().catch((error: unknown) => console.error("Nook: opening settings failed", error));

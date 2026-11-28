@@ -72,7 +72,7 @@ describe("host", () => {
       "deux ",
       "trois ",
     ]);
-    expect(messages.at(-1)).toMatchObject({ kind: "result", result: { text: "un deux trois ", finishReason: "stop" } });
+    expect(messages.at(-1)).toMatchObject({ kind: "result", result: { finishReason: "stop" } });
   });
 
   it("restarts background work that user work interrupted", async () => {
@@ -82,8 +82,12 @@ describe("host", () => {
     await new Promise((resolve) => setTimeout(resolve, 2));
     await call(host, 2, 1, { id: 1, request: { type: "generate", request: generate("user") } }).done;
     const messages = await background.done;
-    expect(messages.some((m) => m.kind === "restart")).toBe(true);
-    expect(messages.at(-1)).toMatchObject({ kind: "result", result: { text: "un deux trois " } });
+    const restart = messages.findIndex((m) => m.kind === "restart");
+    expect(restart).toBeGreaterThan(0);
+    // After the restart marker, the whole reply streams again from the start.
+    const after = messages.slice(restart).filter((m) => m.kind === "delta");
+    expect(after.map((m) => (m as { text: string }).text).join("")).toBe("un deux trois ");
+    expect(messages.at(-1)).toMatchObject({ kind: "result", result: { finishReason: "stop" } });
   });
 
   it("cancels a closed port's work", async () => {

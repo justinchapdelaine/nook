@@ -1,15 +1,14 @@
 // One GPU queue. WebLLM runs one request at a time and can't reorder a
 // running one, so the scheduler orders what is waiting: "user" work (what
 // the user is waiting on) before "background" work, then first come, first
-// served. When user work arrives while preemptible background work runs, the
+// served. When user work arrives while background work runs, the
 // running job is stopped and put back at the front of its queue, to start
 // again from the beginning once the user work is done.
 import type { Priority } from "./runtime/protocol";
 
 export interface Job<T> {
+  /** Background jobs must be safe to stop part-way and run again from the start. */
   priority: Priority;
-  /** Whether the job can be stopped part-way and run again from the start. */
-  preemptible: boolean;
   /**
    * Does the work. `signal` aborts when the job is cancelled or preempted; the
    * job should stop soon after. `attempt` counts from 0 and goes up each time
@@ -25,14 +24,11 @@ export class CancelledError extends Error {
   }
 }
 
-const PREEMPTED = Symbol("preempted");
-const CANCELLED = Symbol("cancelled");
-
 interface Entry {
   job: Job<unknown>;
   seq: number;
   attempt: number;
-  /** Set by cancel(), so a job stopped for preemption and then cancelled isn't run again. */
+  /** Set by cancel(); a job aborted without it was preempted and runs again. */
   cancelled?: boolean;
   controller?: AbortController;
   resolve(value: unknown): void;
@@ -61,8 +57,8 @@ export class Scheduler {
     });
     this.insert(entry);
     const running = this.running;
-    if (running && job.priority === "user" && running.job.priority === "background" && running.job.preemptible) {
-      running.controller?.abort(PREEMPTED);
+    if (running && job.priority === "user" && running.job.priority === "background") {
+      running.controller?.abort();
     }
     this.pump();
     return { result, cancel: () => this.cancel(entry) };
@@ -78,7 +74,7 @@ export class Scheduler {
   private cancel(entry: Entry): void {
     if (this.running === entry) {
       entry.cancelled = true;
-      entry.controller?.abort(CANCELLED);
+      entry.controller?.abort();
       return;
     }
     const at = this.waiting.indexOf(entry);
@@ -98,10 +94,9 @@ export class Scheduler {
     entry.controller = controller;
     const settle = (outcome: () => void) => {
       this.running = undefined;
-      const reason: unknown = controller.signal.reason;
-      if (entry.cancelled || (controller.signal.aborted && reason === CANCELLED)) {
+      if (entry.cancelled) {
         entry.reject(new CancelledError());
-      } else if (controller.signal.aborted && reason === PREEMPTED) {
+      } else if (controller.signal.aborted) {
         entry.attempt++;
         this.insert(entry);
       } else {

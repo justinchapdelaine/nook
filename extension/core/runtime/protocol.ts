@@ -47,7 +47,8 @@ export interface HostResults {
   models: ModelStatus[];
   download: null;
   delete: null;
-  generate: { text: string; finishReason: string | null };
+  /** The reply itself arrives as deltas. */
+  generate: { finishReason: string | null };
 }
 
 /** Error codes a client can act on; any other failure has only a message. */
@@ -79,7 +80,7 @@ export type OffscreenMessage =
   | { type: "offscreen:ensure" }
   /** From the offscreen document: it is ready for ports. */
   | { type: "offscreen:ready" }
-  /** From the offscreen document: it has been idle long enough to close. */
+  /** From the offscreen document: it has been idle long enough to close. Answered only if closing failed. */
   | { type: "offscreen:idle" };
 
 export type EnsureResult = { ok: true } | { ok: false; error: string };

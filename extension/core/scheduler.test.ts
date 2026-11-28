@@ -3,11 +3,10 @@ import type { Job } from "./scheduler";
 import { CancelledError, Scheduler } from "./scheduler";
 
 /** A job that runs until `finish` is called or its signal aborts, and records each start. */
-function controllableJob(name: string, priority: Job<string>["priority"], log: string[], preemptible = true) {
+function controllableJob(name: string, priority: Job<string>["priority"], log: string[]) {
   let finish: () => void = () => {};
   const job: Job<string> = {
     priority,
-    preemptible,
     run: (signal, attempt) =>
       new Promise<string>((resolve, reject) => {
         log.push(`${name}#${attempt}`);
@@ -90,20 +89,20 @@ describe("Scheduler", () => {
     expect(log).toEqual(["a#0", "u#0"]);
   });
 
-  it("never stops user work or work that can't be preempted", async () => {
+  it("never stops user work", async () => {
     const log: string[] = [];
     const scheduler = new Scheduler();
-    const load = controllableJob("load", "background", log, false);
-    const user = controllableJob("user", "user", log);
-    scheduler.add(load.job);
+    const first = controllableJob("first", "user", log);
+    const second = controllableJob("second", "user", log);
+    scheduler.add(first.job);
     await tick();
-    scheduler.add(user.job);
+    scheduler.add(second.job);
     await tick();
-    expect(log).toEqual(["load#0"]);
-    load.finish();
+    expect(log).toEqual(["first#0"]);
+    first.finish();
     await tick();
     await tick();
-    expect(log).toEqual(["load#0", "user#0"]);
+    expect(log).toEqual(["first#0", "second#0"]);
   });
 
   it("cancels waiting and running jobs", async () => {
@@ -130,7 +129,6 @@ describe("Scheduler", () => {
     const scheduler = new Scheduler();
     const result = scheduler.add({
       priority: "user",
-      preemptible: false,
       run: () => {
         throw new Error("boom");
       },

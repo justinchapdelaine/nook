@@ -21,7 +21,7 @@ export interface Engine {
   remove(build: ModelBuild): Promise<void>;
   /**
    * Streams a reply from the loaded build through `onDelta`, as answer text
-   * only (no reasoning block). Aborting `signal` stops the reply early.
+   * only (no reasoning block). Aborting `signal`, before or during the call, stops the reply early.
    */
   generate(
     request: EngineRequest,

@@ -48,7 +48,6 @@ export function createEngine(): Engine {
     unload: () => engine.unload(),
     remove: (build) => deleteModelAllInfoInCache(build.id, config),
     async generate(request, onDelta, signal) {
-      if (signal.aborted) return { finishReason: "abort" };
       const stop = () => void engine.interruptGenerate();
       signal.addEventListener("abort", stop, { once: true });
       try {
@@ -63,9 +62,11 @@ export function createEngine(): Engine {
         const filter = createThinkFilter();
         let finishReason: string | null = null;
         for await (const chunk of chunks) {
-          // An abort while create() was pending fired before generation began, so stop here.
+          // WebLLM clears its interrupt flag when a reply starts, so an abort from before then
+          // (even before this call) is caught here, at the first chunk.
           if (signal.aborted) {
             void engine.interruptGenerate();
+            finishReason = "abort";
             break;
           }
           const choice = chunk.choices[0];
