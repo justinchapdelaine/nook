@@ -31,11 +31,18 @@ export async function bubble(page: Page): Promise<{ status: string; text: string
   return panel ? { status: textOf(find(panel, "status")), text: textOf(find(panel, "text")) } : null;
 }
 
+// SETTINGS_KEY in extension/core/settings.ts. Importing it would pull the model
+// list's JSON into the test runner, which can't load it.
+const SETTINGS_KEY = "settings";
+
 export async function settings(serviceWorker: Worker, change: Partial<Settings>) {
-  await serviceWorker.evaluate(async (change) => {
-    const stored = (await chrome.storage.local.get("settings")).settings ?? {};
-    await chrome.storage.local.set({ settings: { ...stored, ...change } });
-  }, change);
+  await serviceWorker.evaluate(
+    async ([key, change]) => {
+      const stored = (await chrome.storage.local.get(key))[key] ?? {};
+      await chrome.storage.local.set({ [key]: { ...stored, ...change } });
+    },
+    [SETTINGS_KEY, change] as const,
+  );
 }
 
 /** Opens a test page, selects its paragraph and picks Translate selection, as the page menu would. */
@@ -46,10 +53,15 @@ export async function translateOn(page: Page, serviceWorker: Worker, path: strin
     if (text) paragraph.textContent = text;
     getSelection()?.selectAllChildren(paragraph);
   }, text);
+  await pickTranslateSelection(serviceWorker, page.url());
+}
+
+/** Runs Translate selection on the tab at `url`, through the test build's hook in the service worker. */
+export async function pickTranslateSelection(serviceWorker: Worker, url: string) {
   await serviceWorker.evaluate(async (url) => {
     const [tab] = await chrome.tabs.query({ url });
     await (globalThis as unknown as { nookTranslateSelection(tab: unknown): Promise<void> }).nookTranslateSelection(
       tab,
     );
-  }, page.url());
+  }, url);
 }

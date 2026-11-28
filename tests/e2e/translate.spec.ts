@@ -2,7 +2,7 @@
 // (tests/e2e/fake-engine.ts), which "translates" by upper-casing the text.
 import type { Page } from "@playwright/test";
 import { expect, nookTest as test } from "./fixtures";
-import { bubble, settings, translateOn } from "./translate-helpers";
+import { bubble, pickTranslateSelection, settings, translateOn } from "./translate-helpers";
 
 async function openSettings(page: Page, extensionId: string) {
   await page.goto(`chrome-extension://${extensionId}/options.html`);
@@ -68,12 +68,7 @@ test("the shortcut translates text selected inside a text field", async ({ page,
     field.setSelectionRange(0, 7);
   });
   // The shortcut passes no selection text; the translator must read the field's own selection.
-  await serviceWorker.evaluate(async (url) => {
-    const [tab] = await chrome.tabs.query({ url });
-    await (globalThis as unknown as { nookTranslateSelection(tab: unknown): Promise<void> }).nookTranslateSelection(
-      tab,
-    );
-  }, page.url());
+  await pickTranslateSelection(serviceWorker, page.url());
   await expect.poll(async () => (await bubble(page))?.text).toBe("LE CHAT");
 });
 
