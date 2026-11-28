@@ -90,6 +90,20 @@ describe("host", () => {
     expect(messages.at(-1)).toMatchObject({ kind: "result", result: { finishReason: "stop" } });
   });
 
+  it("reports the models' status without waiting behind a reply", async () => {
+    const host = createHost(fakeEngine(), () => {});
+    await call(host, 1, 1, { id: 1, request: { type: "download", family: "Qwen3.5-2B" } }).done;
+    let replied = false;
+    const reply = call(host, 1, 2, { id: 2, request: { type: "generate", request: generate("user") } });
+    void reply.done.then(() => {
+      replied = true;
+    });
+    const status = await call(host, 2, 1, { id: 1, request: { type: "models" } }).done;
+    expect(status.at(-1)).toMatchObject({ kind: "result" });
+    expect(replied).toBe(false);
+    await reply.done;
+  });
+
   it("cancels a closed port's work", async () => {
     const host = createHost(fakeEngine(), () => {});
     await call(host, 1, 1, { id: 1, request: { type: "download", family: "Qwen3.5-2B" } }).done;

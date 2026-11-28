@@ -42,19 +42,20 @@ export function createHost(engine: Engine, onBusyChange: (busy: boolean) => void
 
   function job(request: HostRequest, send: Send, id: number): Ticket<unknown> {
     switch (request.type) {
-      case "models":
-        return scheduler.add({
-          priority: "user",
-          run: async () => {
-            const f16 = await hasF16();
-            return Promise.all(
-              FAMILIES.map(async (family): Promise<ModelStatus> => {
-                const build = pickBuild(family, f16);
-                return { family: family.id, build: build.id, downloaded: await engine.isCached(build) };
-              }),
-            );
-          },
-        });
+      case "models": {
+        // Only reads the cache, so it skips the GPU queue: the settings page shouldn't wait
+        // behind a download or a reply to show its status.
+        const result = (async () => {
+          const f16 = await hasF16();
+          return Promise.all(
+            FAMILIES.map(async (family): Promise<ModelStatus> => {
+              const build = pickBuild(family, f16);
+              return { family: family.id, build: build.id, downloaded: await engine.isCached(build) };
+            }),
+          );
+        })();
+        return { result, cancel() {} };
+      }
       case "download":
         return scheduler.add({
           priority: "user",
