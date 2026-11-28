@@ -1,12 +1,15 @@
 // Client side of the host protocol, for any context that can open a runtime
-// port: the settings page and the translator in a web page. It opens the
-// offscreen document through the service worker, connects when a request
+// port: the settings page, the translator in a web page and the service
+// worker (for tab grouping). It opens the offscreen document through the
+// service worker, or directly when it runs there, connects when a request
 // starts, and disconnects when none is left, so the host can tell it is idle.
 //
 // Only the offscreen document listens for HOST_PORT, so its closing
 // disconnects the port. A host can also hang without closing; the host sends
 // "alive" every HEARTBEAT_MS per open request, and a request that hears
 // nothing for SILENCE_LIMIT_MS fails.
+
+import { ensureOffscreen } from "../offscreen";
 import type {
   ClientMessage,
   EnsureResult,
@@ -17,6 +20,15 @@ import type {
   OffscreenMessage,
 } from "./protocol";
 import { HEARTBEAT_MS, HOST_PORT, SILENCE_LIMIT_MS } from "./protocol";
+
+/** Opens the offscreen document. The service worker does it itself, since its messages never reach its own listener. */
+async function ensureHost(): Promise<void> {
+  if ("ServiceWorkerGlobalScope" in globalThis) return ensureOffscreen();
+  const ready = (await chrome.runtime.sendMessage({ type: "offscreen:ensure" } satisfies OffscreenMessage)) as
+    | EnsureResult
+    | undefined;
+  if (!ready?.ok) throw new HostRequestError(`Nook couldn't start its model host: ${ready?.error ?? "no reply"}`);
+}
 
 export class HostRequestError extends Error {
   constructor(
@@ -99,10 +111,7 @@ export class HostClient {
   private async connect(): Promise<chrome.runtime.Port> {
     if (this.port) return this.port;
     this.connecting ??= (async () => {
-      const ready = (await chrome.runtime.sendMessage({ type: "offscreen:ensure" } satisfies OffscreenMessage)) as
-        | EnsureResult
-        | undefined;
-      if (!ready?.ok) throw new HostRequestError(`Nook couldn't start its model host: ${ready?.error ?? "no reply"}`);
+      await ensureHost();
       const port = chrome.runtime.connect({ name: HOST_PORT });
       port.onMessage.addListener((message: HostMessage) => this.receive(message));
       port.onDisconnect.addListener(() => this.dropped(port));

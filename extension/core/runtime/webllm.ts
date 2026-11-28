@@ -55,6 +55,7 @@ export function createEngine(): Engine {
           messages: request.messages,
           max_tokens: request.maxTokens,
           temperature: request.temperature,
+          response_format: request.jsonSchema ? { type: "json_object", schema: request.jsonSchema } : undefined,
           stream: true,
           // Every task wants a direct answer; WebLLM then adds an empty think block, removed below.
           extra_body: { enable_thinking: false },

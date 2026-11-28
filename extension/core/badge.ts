@@ -24,6 +24,17 @@ export async function flashBadge(text: string, tone: keyof typeof COLORS, title:
   clearTimer = setTimeout(() => void clearBadge(), SHOW_MS);
 }
 
+/** Shows `text` until the next flashBadge or clearBadge, for work that takes a few seconds. */
+export async function showBadge(text: string, title: string): Promise<void> {
+  clearTimeout(clearTimer);
+  await Promise.all([
+    chrome.action.setBadgeBackgroundColor({ color: COLORS.info }),
+    chrome.action.setBadgeTextColor({ color: "#ffffff" }),
+    chrome.action.setBadgeText({ text }),
+    chrome.action.setTitle({ title: `Nook: ${title}` }),
+  ]);
+}
+
 export async function clearBadge(): Promise<void> {
   const title = chrome.runtime.getManifest().action?.default_title ?? "Nook";
   await Promise.all([chrome.action.setBadgeText({ text: "" }), chrome.action.setTitle({ title })]);

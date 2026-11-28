@@ -7,6 +7,13 @@
 //   "slow"  streams slowly, to test cancelling a reply part-way
 //   "markdown"  wraps the reply in Markdown emphasis, as small models do
 // The 0.8B model "downloads" over 3 s instead of 0.3 s, to test a download that outlives its page.
+//
+// A request with a JSON schema is tab grouping: each numbered line goes in a
+// group named after the first word of its (first) title, such as "Recipe".
+// Tab titles containing these words change the reply:
+//   "badjson"  the reply is never valid JSON
+//   "flaky"    the first try (temperature 0) puts a tab in two groups; the retry is valid
+//   "slow"     the reply comes after 2 s
 import type { Engine } from "../../extension/core/runtime/engine";
 
 const CACHE = "nook-fake-models";
@@ -35,6 +42,12 @@ export function createEngine(): Engine {
     },
     async generate(request, onDelta, signal) {
       const text = request.messages.at(-1)?.content ?? "";
+      if (request.jsonSchema) {
+        if (/\bslow\b/i.test(text)) await sleep(2000);
+        if (signal.aborted) return { finishReason: "abort" };
+        onDelta(fakeGrouping(text, request.temperature));
+        return { finishReason: "stop" };
+      }
       const looping = /\bloop\b/i.test(text);
       const delay = /\bslow\b/i.test(text) ? 300 : 10;
       const reply = /\bmarkdown\b/i.test(text) ? `*${text.toUpperCase()}*` : text.toUpperCase();
@@ -47,4 +60,20 @@ export function createEngine(): Engine {
       return { finishReason: "stop" };
     },
   };
+}
+
+/** Groups the prompt's numbered lines by the first word of their first title. */
+function fakeGrouping(prompt: string, temperature: number): string {
+  if (/badjson/i.test(prompt)) return "{ not json";
+  const groups = new Map<string, number[]>();
+  for (const [, n, rest] of prompt.matchAll(/^(\d+)\. (.*)$/gm)) {
+    // "site, 3 tabs: Title; Title" for a site's tabs that stay together, else "Title (site)".
+    const title = rest?.replace(/^[^,]+, \d+ tabs: /, "") ?? "";
+    const word = title.match(/[\p{L}\p{N}]+/u)?.[0] ?? "Other";
+    const name = word[0]?.toUpperCase() + word.slice(1).toLowerCase();
+    groups.set(name, [...(groups.get(name) ?? []), Number(n)]);
+  }
+  const list = [...groups].map(([name, tabs]) => ({ name, tabs }));
+  if (/flaky/i.test(prompt) && temperature === 0 && list.length > 0) list.push({ name: "Again", tabs: [1] });
+  return JSON.stringify({ groups: list });
 }

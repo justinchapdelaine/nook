@@ -8,6 +8,8 @@ export interface EngineRequest {
   messages: ChatMessage[];
   maxTokens: number;
   temperature: number;
+  /** A JSON schema, as a string, that the reply must follow. */
+  jsonSchema?: string;
 }
 
 export interface Engine {

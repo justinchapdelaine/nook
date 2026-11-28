@@ -22,6 +22,8 @@ export const NO_GROUP = -1;
 export interface GroupCandidate {
   id: number;
   url?: string;
+  /** The page title, which grouping by topic reads. */
+  title?: string;
   pinned: boolean;
   groupId: number;
 }
@@ -33,11 +35,16 @@ export interface ExistingGroup {
 }
 
 /** One group to create (no `groupId`) or to add tabs to. `color` is only used for a new group. */
-export interface SiteGroup {
+export interface PlannedGroup {
   title: string;
   color: GroupColor;
   tabIds: number[];
   groupId?: number;
+}
+
+/** Whether grouping may move a tab: an unpinned web or file page in no group. */
+export function isMovable<T extends GroupCandidate>(tab: T): tab is T & { url: string } {
+  return !tab.pinned && tab.groupId === NO_GROUP && isWebUrl(tab.url);
 }
 
 /** A stable colour per site, so a site keeps its colour from one run to the next. */
@@ -58,15 +65,13 @@ export function planSiteGroups(
   tabs: readonly GroupCandidate[],
   groups: readonly ExistingGroup[],
   siteOf: (hostname: string) => string,
-): SiteGroup[] {
-  const movable = tabs.filter(
-    (tab): tab is GroupCandidate & { url: string } => !tab.pinned && tab.groupId === NO_GROUP && isWebUrl(tab.url),
-  );
+): PlannedGroup[] {
+  const movable = tabs.filter(isMovable);
   const bySite = Map.groupBy(movable, (tab) => {
     const url = new URL(tab.url);
     return url.protocol === "file:" ? "Files" : siteOf(url.hostname);
   });
-  const plan: SiteGroup[] = [];
+  const plan: PlannedGroup[] = [];
   for (const [title, siteTabs] of bySite) {
     const tabIds = siteTabs.map((tab) => tab.id);
     const existing = groups.find((group) => group.title === title);
