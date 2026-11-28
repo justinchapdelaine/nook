@@ -43,7 +43,7 @@ export default defineConfig({
     const testBuild = mode === "e2e" || mode === "smoke";
     return {
       name: "Nook",
-      version: "0.2.0",
+      version: "0.3.0",
       description: "Tab tools and translation that run only on your device.",
       minimum_chrome_version: "153",
       // Each permission's reason is in CHROMEWEBSTORE.md.
