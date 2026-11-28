@@ -23,7 +23,7 @@
   "scripts": {
     "fetch:libs": "node scripts/fetch-model-libs.ts extension/public/model-libs models/models.json",
     "bench:fetch:libs": "node scripts/fetch-model-libs.ts bench/public/model-libs models/models.json bench/models.json",
-    "prepare": "wxt prepare extension && wxt prepare bench",
+    "prepare": "wxt prepare bench && wxt prepare extension",
     "dev": "npm run fetch:libs && wxt extension",
     "build": "npm run fetch:libs && wxt build extension",
     "zip": "npm run fetch:libs && wxt zip extension",
